@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/balamuruganpg/promptregress/schema/suite.json",
+  "title": "PromptRegress suite",
+  "description": "JSON or YAML suite document loaded by promptregress. JSONL (one case per line) and CSV (id, input, reference) are separate loader formats and are not described here. Mock rules are not a suite field: they are the CLI --mock-rules list and a matrix-config field. Where this schema and the loader disagree, the loader wins.",
+  "$comment": "Not expressed: duplicate case ids; scoring.weights keys must be scorer kinds used on the suite's assertions; JSONL and CSV suites; non-finite YAML numbers; mock rules (not a suite field). kind is any non-empty string because the loader does not consult the scorer registry. All-zero scoring.weights are expressed with not/const. Negative assertion weights load and fail later in score_case, so this schema allows them.",
+  "type": "object",
+  "required": ["cases"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "description": "Non-empty suite name. Omitted names use the file stem. Whitespace-only is rejected."
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Optional text. Null is treated as an empty description."
+    },
+    "scoring": {
+      "type": ["object", "null"],
+      "description": "Optional scorer-kind weights. Null or an omitted block is equal weights.",
+      "properties": {
+        "weights": {
+          "type": ["object", "null"],
+          "description": "Map of scorer kind to a non-negative weight. Null is equal weights. The loader also rejects unknown kinds and a map whose every weight is 0. Unknown kinds are not expressed here.",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          },
+          "not": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "const": 0
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": ["id", "input"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Non-empty case id. The loader rejects duplicates; this schema does not."
+        },
+        "input": {
+          "type": "string"
+        },
+        "reference": {
+          "type": ["string", "null"],
+          "description": "Omitted or null means no reference."
+        },
+        "assertions": {
+          "type": ["array", "null"],
+          "description": "Omitted or null means no assertions.",
+          "items": {
+            "$ref": "#/$defs/assertion"
+          }
+        },
+        "tags": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "metadata": {
+          "type": ["object", "null"]
+        }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Scorer name. Any non-empty string loads. Built-ins include exact_match, contains, regex, json_valid, json_schema, numeric_tolerance, levenshtein, tfidf_cosine, llm_judge, and trace_match."
+        },
+        "value": true,
+        "weight": {
+          "type": "number",
+          "description": "Finite assertion weight. Defaults to 1. The loader does not reject a negative weight; scoring does."
+        },
+        "params": {
+          "type": ["object", "null"],
+          "description": "Scorer options such as tol. Null is an empty object."
+        }
+      }
+    }
+  }
+}
