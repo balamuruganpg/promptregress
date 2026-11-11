@@ -1,0 +1,265 @@
+{
+  "name": "code_gen",
+  "description": "Short code-writing tasks scored with contains, regex, and JSON structural checks. References are the expected snippets.",
+  "cases": [
+    {
+      "id": "palindrome",
+      "input": "id: palindrome\nWrite a Python snippet.\nReturn True when text reads the same forwards and backwards, ignoring case.",
+      "reference": "def is_palindrome(text: str) -> bool:\n    folded = text.casefold()\n    return folded == folded[::-1]\n",
+      "tags": [
+        "python",
+        "strings"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "def is_palindrome"
+        },
+        {
+          "kind": "contains",
+          "value": "[::-1]"
+        },
+        {
+          "kind": "regex",
+          "value": "return folded =="
+        }
+      ]
+    },
+    {
+      "id": "clamp",
+      "input": "id: clamp\nWrite a Python snippet.\nClamp value into the closed interval from low to high.",
+      "reference": "def clamp(value: float, low: float, high: float) -> float:\n    return max(low, min(high, value))\n",
+      "tags": [
+        "python",
+        "numbers"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "def clamp"
+        },
+        {
+          "kind": "contains",
+          "value": "min(high"
+        },
+        {
+          "kind": "regex",
+          "value": "return max"
+        }
+      ]
+    },
+    {
+      "id": "parse_int",
+      "input": "id: parse_int\nWrite a Python snippet.\nParse text as an int. Return None when the text is not an integer.",
+      "reference": "def parse_int(text: str) -> int | None:\n    try:\n        return int(text)\n    except ValueError:\n        return None\n",
+      "tags": [
+        "python",
+        "errors"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "except ValueError"
+        },
+        {
+          "kind": "regex",
+          "value": "return int\\(text\\)"
+        }
+      ]
+    },
+    {
+      "id": "dedupe",
+      "input": "id: dedupe\nWrite a Python snippet.\nDrop duplicate strings and keep the first occurrence of each.",
+      "reference": "def dedupe(items: list[str]) -> list[str]:\n    return list(dict.fromkeys(items))\n",
+      "tags": [
+        "python",
+        "collections"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "dict.fromkeys"
+        },
+        {
+          "kind": "regex",
+          "value": "def dedupe"
+        }
+      ]
+    },
+    {
+      "id": "user_json",
+      "input": "id: user_json\nWrite a Python snippet.\nReturn a JSON object with string fields name and email for Ada Lovelace, ada@example.com.",
+      "reference": "{\"name\": \"Ada Lovelace\", \"email\": \"ada@example.com\"}",
+      "tags": [
+        "json",
+        "data"
+      ],
+      "metadata": {
+        "language": "json"
+      },
+      "assertions": [
+        {
+          "kind": "json_valid"
+        },
+        {
+          "kind": "json_schema",
+          "value": {
+            "type": "object",
+            "required": [
+              "name",
+              "email"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fizzbuzz",
+      "input": "id: fizzbuzz\nWrite a Python snippet.\nBuild the FizzBuzz list from 1 through n. Multiples of 15 are FizzBuzz.",
+      "reference": "def fizzbuzz(n: int) -> list[str]:\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append(\"FizzBuzz\")\n        elif i % 3 == 0:\n            out.append(\"Fizz\")\n        elif i % 5 == 0:\n            out.append(\"Buzz\")\n        else:\n            out.append(str(i))\n    return out\n",
+      "tags": [
+        "python",
+        "control"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "def fizzbuzz"
+        },
+        {
+          "kind": "contains",
+          "value": "FizzBuzz",
+          "params": {"case_sensitive": true}
+        },
+        {
+          "kind": "regex",
+          "value": "i % 3 == 0"
+        }
+      ]
+    },
+    {
+      "id": "read_header",
+      "input": "id: read_header\nWrite a Python snippet.\nRead the first row of a CSV file and return it as a list of strings.",
+      "reference": "import csv\n\ndef read_header(path: str) -> list[str]:\n    with open(path, newline=\"\") as handle:\n        return next(csv.reader(handle))\n",
+      "tags": [
+        "python",
+        "io"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "csv.reader"
+        },
+        {
+          "kind": "regex",
+          "value": "def read_header"
+        }
+      ]
+    },
+    {
+      "id": "safe_div",
+      "input": "id: safe_div\nWrite a Python snippet.\nDivide numerator by denominator. Return None when the denominator is 0.",
+      "reference": "def safe_div(numerator: float, denominator: float) -> float | None:\n    if denominator == 0:\n        return None\n    return numerator / denominator\n",
+      "tags": [
+        "python",
+        "numbers"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "denominator == 0"
+        },
+        {
+          "kind": "regex",
+          "value": "return None"
+        }
+      ]
+    },
+    {
+      "id": "slugify",
+      "input": "id: slugify\nWrite a Python snippet.\nTurn a title into a lowercase slug, with non-letters replaced by hyphens.",
+      "reference": "import re\n\ndef slugify(title: str) -> str:\n    lowered = title.strip().casefold()\n    return re.sub(r\"[^a-z0-9]+\", \"-\", lowered).strip(\"-\")\n",
+      "tags": [
+        "python",
+        "strings"
+      ],
+      "metadata": {
+        "language": "python"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "re.sub"
+        },
+        {
+          "kind": "regex",
+          "value": "def slugify"
+        }
+      ]
+    },
+    {
+      "id": "config_json",
+      "input": "id: config_json\nWrite a Python snippet.\nReturn a JSON object with host 127.0.0.1 and integer port 8080.",
+      "reference": "{\"host\": \"127.0.0.1\", \"port\": 8080}",
+      "tags": [
+        "json",
+        "config"
+      ],
+      "metadata": {
+        "language": "json"
+      },
+      "assertions": [
+        {
+          "kind": "json_valid"
+        },
+        {
+          "kind": "json_schema",
+          "value": {
+            "type": "object",
+            "required": [
+              "host",
+              "port"
+            ],
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

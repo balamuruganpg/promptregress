@@ -1,0 +1,5 @@
+# Candidate half of the bundled offline demo.
+# Provider and mock rules live on examples/ci/baseline.yaml because compare
+# calls one provider for both templates. This template makes MockProvider
+# return the short answers, so the gate fails at max-regression 0.
+template: "Answer briefly.\n{input}"
