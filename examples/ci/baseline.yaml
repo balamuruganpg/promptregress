@@ -1,0 +1,44 @@
+# Baseline half of the bundled offline demo.
+# `promptregress demo` answers in full on this template and drops three cases
+# on examples/ci/candidate.yaml. The gate fails at max-regression 0.
+provider: mock
+template: "Answer completely.\n{input}"
+mock_default: I do not know.
+mock_rules:
+- - "Answer briefly.\nHow do I reset my password?"
+  - Use the reset link.
+- - "Answer briefly.\nWhat is your refund policy?"
+  - We offer refunds.
+- - "Answer briefly.\nHow long does standard shipping take?"
+  - Shipping varies.
+- - Return my latest invoice as JSON with id and total.
+  - '{"id": "INV-100", "total": 42.5}'
+- - How do I enable two-factor authentication?
+  - Open Security, choose Two-factor authentication, and scan the QR code with your
+    authenticator app.
+- - How long does standard shipping take?
+  - Standard shipping takes 5 business days.
+- - Which payment methods do you accept?
+  - We accept Visa, Mastercard, and PayPal.
+- - What are the password requirements?
+  - Use at least 12 characters with one number and one symbol.
+- - How do I cancel my subscription?
+  - Open Billing, choose Manage subscription, then Cancel. You keep access until the
+    period ends.
+- - How much is express shipping?
+  - Express shipping costs 15 dollars.
+- - What are your support hours?
+  - Support is available Monday to Friday, 09:00 to 18:00 UTC.
+- - How do I reset my password?
+  - Go to Settings, choose Security, then Reset password. Use the email link within
+    30 minutes.
+- - What is your refund policy?
+  - Refunds are available within 30 days for unused items in original packaging.
+- - Where can I track my order?
+  - Open Orders and select Track shipment to see the carrier status.
+- - How do I export my data?
+  - Go to Privacy, choose Download my data, and we email a zip file within 48 hours.
+- - How do I email support?
+  - Email support@example.com and include your account id.
+- - What is the uptime SLA?
+  - The uptime SLA is 99.9 percent measured monthly.

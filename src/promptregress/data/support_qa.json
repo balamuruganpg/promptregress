@@ -1,0 +1,173 @@
+{
+  "name": "support_qa",
+  "description": "Customer-support answers for the offline PromptRegress demo. Each case has a reference answer and deterministic assertions.",
+  "cases": [
+    {
+      "id": "password_reset",
+      "input": "How do I reset my password?",
+      "reference": "Go to Settings, choose Security, then Reset password. Use the email link within 30 minutes.",
+      "tags": ["account", "security"],
+      "metadata": {"priority": "high"},
+      "assertions": [
+        {"kind": "contains", "value": "Settings"},
+        {"kind": "contains", "value": "30 minutes"},
+        {"kind": "regex", "value": "email link"}
+      ]
+    },
+    {
+      "id": "refund_policy",
+      "input": "What is your refund policy?",
+      "reference": "Refunds are available within 30 days for unused items in original packaging.",
+      "tags": ["billing"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "30 days"},
+        {"kind": "contains", "value": "unused"}
+      ]
+    },
+    {
+      "id": "shipping_time",
+      "input": "How long does standard shipping take?",
+      "reference": "Standard shipping takes 5 business days.",
+      "tags": ["shipping"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "numeric_tolerance", "value": 5, "params": {"tol": 0.0}},
+        {"kind": "contains", "value": "business days"}
+      ]
+    },
+    {
+      "id": "track_order",
+      "input": "Where can I track my order?",
+      "reference": "Open Orders and select Track shipment to see the carrier status.",
+      "tags": ["shipping"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Track shipment"},
+        {"kind": "exact_match"}
+      ]
+    },
+    {
+      "id": "cancel_subscription",
+      "input": "How do I cancel my subscription?",
+      "reference": "Open Billing, choose Manage subscription, then Cancel. You keep access until the period ends.",
+      "tags": ["billing"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Billing"},
+        {"kind": "regex", "value": "Cancel"}
+      ]
+    },
+    {
+      "id": "support_hours",
+      "input": "What are your support hours?",
+      "reference": "Support is available Monday to Friday, 09:00 to 18:00 UTC.",
+      "tags": ["support"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Monday"},
+        {"kind": "regex", "value": "\\d{2}:\\d{2}"},
+        {"kind": "contains", "value": "18:00"}
+      ]
+    },
+    {
+      "id": "payment_methods",
+      "input": "Which payment methods do you accept?",
+      "reference": "We accept Visa, Mastercard, and PayPal.",
+      "tags": ["billing"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Visa"},
+        {"kind": "contains", "value": "PayPal"}
+      ]
+    },
+    {
+      "id": "export_data",
+      "input": "How do I export my data?",
+      "reference": "Go to Privacy, choose Download my data, and we email a zip file within 48 hours.",
+      "tags": ["privacy"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Privacy"},
+        {"kind": "numeric_tolerance", "value": 48, "params": {"tol": 0}}
+      ]
+    },
+    {
+      "id": "two_factor",
+      "input": "How do I enable two-factor authentication?",
+      "reference": "Open Security, choose Two-factor authentication, and scan the QR code with your authenticator app.",
+      "tags": ["security"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "contains", "value": "Two-factor"},
+        {"kind": "contains", "value": "QR code"}
+      ]
+    },
+    {
+      "id": "latest_invoice",
+      "input": "Return my latest invoice as JSON with id and total.",
+      "reference": "{\"id\": \"INV-100\", \"total\": 42.5}",
+      "tags": ["billing", "json"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "json_valid"},
+        {
+          "kind": "json_schema",
+          "value": {
+            "type": "object",
+            "required": ["id", "total"],
+            "properties": {
+              "id": {"type": "string"},
+              "total": {"type": "number"}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "express_shipping_cost",
+      "input": "How much is express shipping?",
+      "reference": "Express shipping costs 15 dollars.",
+      "tags": ["shipping"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "numeric_tolerance", "value": 15, "params": {"tol": 0.5}},
+        {"kind": "contains", "value": "Express"}
+      ]
+    },
+    {
+      "id": "password_rules",
+      "input": "What are the password requirements?",
+      "reference": "Use at least 12 characters with one number and one symbol.",
+      "tags": ["security"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "regex", "value": "\\b12\\b"},
+        {"kind": "contains", "value": "symbol"},
+        {"kind": "numeric_tolerance", "value": 12, "params": {"tol": 0}}
+      ]
+    },
+    {
+      "id": "contact_email",
+      "input": "How do I email support?",
+      "reference": "Email support@example.com and include your account id.",
+      "tags": ["support"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "regex", "value": "support@example\\.com"},
+        {"kind": "contains", "value": "account id"}
+      ]
+    },
+    {
+      "id": "uptime_sla",
+      "input": "What is the uptime SLA?",
+      "reference": "The uptime SLA is 99.9 percent measured monthly.",
+      "tags": ["reliability"],
+      "metadata": {},
+      "assertions": [
+        {"kind": "numeric_tolerance", "value": 99.9, "params": {"tol": 0.01}},
+        {"kind": "contains", "value": "monthly"}
+      ]
+    }
+  ]
+}
