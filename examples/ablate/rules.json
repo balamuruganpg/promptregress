@@ -1,0 +1,6 @@
+[
+  ["POLICY::hours", "We are open 9 to 5."],
+  ["POLICY::refund", "Refunds take 5 days."],
+  ["POLICY::shipping", "Orders ship in 2 days."],
+  ["POLICY::warranty", "The warranty lasts 1 year."]
+]

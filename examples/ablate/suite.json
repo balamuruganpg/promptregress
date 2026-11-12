@@ -1,0 +1,30 @@
+{
+  "name": "ablation-demo",
+  "description": "Toy suite for promptregress ablate. The Policy block holds POLICY::{input}, which the mock rules match. Tone is a greeting the mock ignores.",
+  "cases": [
+    {
+      "id": "hours",
+      "input": "hours",
+      "reference": "We are open 9 to 5.",
+      "assertions": [{"kind": "exact_match"}]
+    },
+    {
+      "id": "refund",
+      "input": "refund",
+      "reference": "Refunds take 5 days.",
+      "assertions": [{"kind": "exact_match"}]
+    },
+    {
+      "id": "shipping",
+      "input": "shipping",
+      "reference": "Orders ship in 2 days.",
+      "assertions": [{"kind": "exact_match"}]
+    },
+    {
+      "id": "warranty",
+      "input": "warranty",
+      "reference": "The warranty lasts 1 year.",
+      "assertions": [{"kind": "exact_match"}]
+    }
+  ]
+}
