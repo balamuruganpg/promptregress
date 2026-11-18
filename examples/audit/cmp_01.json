@@ -1,0 +1,529 @@
+{
+  "suite_name": "suite-audit-demo",
+  "baseline": {
+    "suite_name": "suite-audit-demo",
+    "config_name": "config_a",
+    "mean_score": 0.5,
+    "pass_rate": 0.5,
+    "total_latency_ms": 8.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "core_a",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "core_b",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "core_c",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "dead",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "noise",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "core_a",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "core_b",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "core_c",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "redundant_a",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "redundant_b",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "noise",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "reverse",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "dead",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "candidate": {
+    "suite_name": "suite-audit-demo",
+    "config_name": "config_b",
+    "mean_score": 0.625,
+    "pass_rate": 0.625,
+    "total_latency_ms": 8.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "core_a",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "core_b",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "core_c",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "dead",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "noise",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "core_a",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "core_b",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "core_c",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "redundant_a",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "redundant_b",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "noise",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "reverse",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "dead",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "mean_diff": 0.125,
+  "ci_low": -0.25,
+  "ci_high": 0.5,
+  "alpha": 0.05,
+  "ci_method": "percentile",
+  "mcnemar_p": 1.0,
+  "mcnemar_b": 1,
+  "mcnemar_c": 2,
+  "wilcoxon_stat": 4.0,
+  "wilcoxon_p": 1.0,
+  "ttest_stat": 0.5516772843673704,
+  "ttest_df": 7.0,
+  "ttest_p": 0.5983311559987461,
+  "cohens_dz": 0.1950473744013735,
+  "effect_size_label": "negligible",
+  "wins": 2,
+  "losses": 1,
+  "ties": 5,
+  "slices": [],
+  "details": [],
+  "per_case": [
+    {
+      "case_id": "core_a",
+      "baseline_output": "pass",
+      "candidate_output": "pass",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "core_b",
+      "baseline_output": "pass",
+      "candidate_output": "pass",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "core_c",
+      "baseline_output": "pass",
+      "candidate_output": "fail",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": []
+    },
+    {
+      "case_id": "redundant_a",
+      "baseline_output": "fail",
+      "candidate_output": "pass",
+      "baseline_score": 0.0,
+      "candidate_score": 1.0,
+      "diff": 1.0,
+      "baseline_passed": false,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "redundant_b",
+      "baseline_output": "pass",
+      "candidate_output": "pass",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "noise",
+      "baseline_output": "fail",
+      "candidate_output": "pass",
+      "baseline_score": 0.0,
+      "candidate_score": 1.0,
+      "diff": 1.0,
+      "baseline_passed": false,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "reverse",
+      "baseline_output": "fail",
+      "candidate_output": "fail",
+      "baseline_score": 0.0,
+      "candidate_score": 0.0,
+      "diff": 0.0,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "dead",
+      "baseline_output": "fail",
+      "candidate_output": "fail",
+      "baseline_score": 0.0,
+      "candidate_score": 0.0,
+      "diff": 0.0,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "tie",
+      "tags": []
+    }
+  ],
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "FAIL regression: upper bound exceeds max_regression (mean_diff 0.125000, 95% CI [-0.250000, 0.500000], regression upper bound 0.250000, max_regression 0.000000).",
+      "PASS pass rate: candidate meets the minimum (candidate pass rate 0.625000, minimum 0.000000).",
+      "PASS significance: require_significant is off."
+    ]
+  }
+}

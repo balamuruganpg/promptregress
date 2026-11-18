@@ -1,0 +1,7 @@
+Answer using the named blocks.
+
+## Policy
+POLICY::{input}
+
+## Tone
+Be warm and professional.

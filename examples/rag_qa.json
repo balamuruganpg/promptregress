@@ -1,0 +1,270 @@
+{
+  "name": "rag_qa",
+  "description": "Retrieval questions. Each input includes a context passage, and the reference answer uses a fact from that passage plus a citation marker.",
+  "cases": [
+    {
+      "id": "refund_window",
+      "input": "id: refund_window\nQuestion: How long can a customer return an unused seat?\n\nContext:\n[1] Northwind refunds an unused seat within 30 days of purchase. After that window the invoice is final and the seat credit expires.",
+      "reference": "An unused seat can be refunded within 30 days of purchase [1].",
+      "tags": [
+        "billing",
+        "policy"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "30 days"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "link_expiry",
+      "input": "id: link_expiry\nQuestion: How long does a password reset link stay valid?\n\nContext:\n[1] Password reset links expire after 15 minutes and can be used once. A second request invalidates the earlier link.",
+      "reference": "A password reset link expires after 15 minutes and works once [1].",
+      "tags": [
+        "security",
+        "account"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "15 minutes"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "ship_cutoff",
+      "input": "id: ship_cutoff\nQuestion: What is the cutoff for same-day shipping?\n\nContext:\n[2] Orders placed before 14:00 local time ship the same day from the Austin warehouse. Later orders leave the next business morning.",
+      "reference": "Orders placed before 14:00 local time ship the same day from Austin [2].",
+      "tags": [
+        "shipping",
+        "policy"
+      ],
+      "metadata": {
+        "citation": "[2]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "14:00"
+        },
+        {
+          "kind": "contains",
+          "value": "[2]"
+        }
+      ]
+    },
+    {
+      "id": "export_delay",
+      "input": "id: export_delay\nQuestion: When does a personal data export arrive?\n\nContext:\n[1] A data export is emailed as a zip file within 7 days of the request. The link inside the message stays live for 48 hours.",
+      "reference": "The export zip is emailed within 7 days of the request [1].",
+      "tags": [
+        "privacy",
+        "account"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "7 days"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "support_hours",
+      "input": "id: support_hours\nQuestion: When is live chat staffed?\n\nContext:\n[1] Live chat is staffed Monday to Friday, 09:00 to 17:00 UTC. Weekend messages wait in the queue until Monday.",
+      "reference": "Live chat runs Monday to Friday, 09:00 to 17:00 UTC [1].",
+      "tags": [
+        "support",
+        "policy"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "17:00"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "plan_price",
+      "input": "id: plan_price\nQuestion: What does the Pro plan cost?\n\nContext:\n[2] The Pro plan is 29 dollars per seat each month, billed to the workspace owner. Annual billing is offered as a separate invoice.",
+      "reference": "The Pro plan costs 29 dollars per seat each month [2].",
+      "tags": [
+        "billing",
+        "product"
+      ],
+      "metadata": {
+        "citation": "[2]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "29 dollars"
+        },
+        {
+          "kind": "contains",
+          "value": "[2]"
+        }
+      ]
+    },
+    {
+      "id": "retention",
+      "input": "id: retention\nQuestion: How long do deleted workspaces stay in backups?\n\nContext:\n[1] Deleted workspaces are purged from backups after 90 days. Until then a support admin can request a restore.",
+      "reference": "Deleted workspaces are purged from backups after 90 days [1].",
+      "tags": [
+        "privacy",
+        "policy"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "90 days"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "sso_setup",
+      "input": "id: sso_setup\nQuestion: What does SSO setup require?\n\nContext:\n[2] SSO requires a verified domain and a SAML metadata URL from the identity provider. Passwords stay enabled until the first successful SSO login.",
+      "reference": "SSO needs a verified domain and a SAML metadata URL [2].",
+      "tags": [
+        "security",
+        "product"
+      ],
+      "metadata": {
+        "citation": "[2]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "SAML metadata URL"
+        },
+        {
+          "kind": "contains",
+          "value": "[2]"
+        }
+      ]
+    },
+    {
+      "id": "api_limit",
+      "input": "id: api_limit\nQuestion: What is the public API rate limit?\n\nContext:\n[1] The public API allows 600 requests per minute per token. Bursts above that limit receive HTTP 429.",
+      "reference": "The public API allows 600 requests per minute per token [1].",
+      "tags": [
+        "product",
+        "reliability"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "600 requests"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "warranty",
+      "input": "id: warranty\nQuestion: How long are hardware replacements covered?\n\nContext:\n[2] Hardware replacements are covered for 12 months from delivery. The replacement ships from the same warehouse as the original unit.",
+      "reference": "Hardware replacements are covered for 12 months from delivery [2].",
+      "tags": [
+        "shipping",
+        "product"
+      ],
+      "metadata": {
+        "citation": "[2]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "12 months"
+        },
+        {
+          "kind": "contains",
+          "value": "[2]"
+        }
+      ]
+    },
+    {
+      "id": "onboarding",
+      "input": "id: onboarding\nQuestion: What must a new tenant do before inviting members?\n\nContext:\n[1] New tenants must confirm an admin email before inviting members. Invites sent earlier stay queued and are not delivered.",
+      "reference": "New tenants confirm an admin email before inviting members [1].",
+      "tags": [
+        "account",
+        "product"
+      ],
+      "metadata": {
+        "citation": "[1]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "admin email"
+        },
+        {
+          "kind": "contains",
+          "value": "[1]"
+        }
+      ]
+    },
+    {
+      "id": "incident_ack",
+      "input": "id: incident_ack\nQuestion: How fast are severity 1 incidents acknowledged?\n\nContext:\n[2] Severity 1 incidents are acknowledged within 15 minutes, day or night. A status page update follows the acknowledgement.",
+      "reference": "Severity 1 incidents are acknowledged within 15 minutes [2].",
+      "tags": [
+        "reliability",
+        "support"
+      ],
+      "metadata": {
+        "citation": "[2]"
+      },
+      "assertions": [
+        {
+          "kind": "contains",
+          "value": "15 minutes"
+        },
+        {
+          "kind": "contains",
+          "value": "[2]"
+        }
+      ]
+    }
+  ]
+}

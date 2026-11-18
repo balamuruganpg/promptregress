@@ -1,0 +1,425 @@
+{
+  "suite_name": "bayes-demo",
+  "baseline": {
+    "suite_name": "bayes-demo",
+    "config_name": "baseline",
+    "mean_score": 1.0,
+    "pass_rate": 1.0,
+    "total_latency_ms": 6.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "export_delay",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "hours_ok",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "password_reset",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "refund_ok",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "refund_policy",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "refund_ok",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "hours_ok",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "password_reset",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "refund_policy",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "shipping_time",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "export_delay",
+        "output": "full answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "candidate": {
+    "suite_name": "bayes-demo",
+    "config_name": "candidate",
+    "mean_score": 0.3333333333333333,
+    "pass_rate": 0.3333333333333333,
+    "total_latency_ms": 6.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "export_delay",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "hours_ok",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "password_reset",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "refund_ok",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "refund_policy",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "refund_ok",
+        "output": "brief answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "hours_ok",
+        "output": "brief answer",
+        "scores": {
+          "contains": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "password_reset",
+        "output": "brief answer",
+        "scores": {
+          "contains": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "refund_policy",
+        "output": "brief answer",
+        "scores": {
+          "contains": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "shipping_time",
+        "output": "brief answer",
+        "scores": {
+          "contains": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "export_delay",
+        "output": "brief answer",
+        "scores": {
+          "contains": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "mean_diff": -0.6666666666666666,
+  "ci_low": -1.0,
+  "ci_high": -0.3333333333333333,
+  "alpha": 0.05,
+  "ci_method": "percentile",
+  "mcnemar_p": 0.125,
+  "mcnemar_b": 4,
+  "mcnemar_c": 0,
+  "wilcoxon_stat": 0,
+  "wilcoxon_p": 0.125,
+  "ttest_stat": -3.1622776601683786,
+  "ttest_df": 5.0,
+  "ttest_p": 0.025031015818452955,
+  "cohens_dz": -1.2909944487358054,
+  "effect_size_label": "large",
+  "wins": 0,
+  "losses": 4,
+  "ties": 2,
+  "slices": [],
+  "details": [],
+  "per_case": [
+    {
+      "case_id": "refund_ok",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "hours_ok",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "password_reset",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": []
+    },
+    {
+      "case_id": "refund_policy",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": []
+    },
+    {
+      "case_id": "shipping_time",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": []
+    },
+    {
+      "case_id": "export_delay",
+      "baseline_output": "full answer",
+      "candidate_output": "brief answer",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": []
+    }
+  ],
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "FAIL regression: upper bound exceeds max_regression (mean_diff -0.666667, 95% CI [-1.000000, -0.333333], regression upper bound 1.000000, max_regression 0.000000).",
+      "PASS pass rate: candidate meets the minimum (candidate pass rate 0.333333, minimum 0.000000).",
+      "PASS significance: require_significant is off."
+    ]
+  }
+}

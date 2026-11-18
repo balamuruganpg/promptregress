@@ -1,0 +1,378 @@
+{
+  "suite_name": "select-demo",
+  "baseline": {
+    "suite_name": "select-demo",
+    "config_name": "baseline",
+    "mean_score": 1.0,
+    "pass_rate": 1.0,
+    "total_latency_ms": 4.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "billing",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "greeting",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "latency",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "retired",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "billing",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "account"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "latency",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "perf"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "greeting",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "tone"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "retired",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "legacy"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "candidate": {
+    "suite_name": "select-demo",
+    "config_name": "candidate",
+    "mean_score": 0.5,
+    "pass_rate": 0.5,
+    "total_latency_ms": 4.0,
+    "mean_latency_ms": 1.0,
+    "p95_latency_ms": 1.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "billing",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "greeting",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "latency",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "retired",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "billing",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "account"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "latency",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "perf"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "greeting",
+        "output": "pass",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "tone"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "retired",
+        "output": "fail",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 1.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "legacy"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ]
+  },
+  "mean_diff": -0.5,
+  "ci_low": -1.0,
+  "ci_high": 0.0,
+  "alpha": 0.05,
+  "ci_method": "percentile",
+  "mcnemar_p": 0.5,
+  "mcnemar_b": 2,
+  "mcnemar_c": 0,
+  "wilcoxon_stat": 0,
+  "wilcoxon_p": 0.5,
+  "ttest_stat": -1.7320508075688774,
+  "ttest_df": 3.0,
+  "ttest_p": 0.18169011381620911,
+  "cohens_dz": -0.8660254037844387,
+  "effect_size_label": "large",
+  "wins": 0,
+  "losses": 2,
+  "ties": 2,
+  "slices": [
+    {
+      "tag": "account",
+      "n": 1,
+      "mean_diff": -1.0,
+      "ci_low": -1.0,
+      "ci_high": -1.0,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0
+    },
+    {
+      "tag": "legacy",
+      "n": 1,
+      "mean_diff": -1.0,
+      "ci_low": -1.0,
+      "ci_high": -1.0,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0
+    },
+    {
+      "tag": "perf",
+      "n": 1,
+      "mean_diff": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ties": 1
+    },
+    {
+      "tag": "tone",
+      "n": 1,
+      "mean_diff": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ties": 1
+    }
+  ],
+  "details": [],
+  "per_case": [
+    {
+      "case_id": "billing",
+      "baseline_output": "pass",
+      "candidate_output": "fail",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "account"
+      ]
+    },
+    {
+      "case_id": "latency",
+      "baseline_output": "pass",
+      "candidate_output": "pass",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": [
+        "perf"
+      ]
+    },
+    {
+      "case_id": "greeting",
+      "baseline_output": "pass",
+      "candidate_output": "pass",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": [
+        "tone"
+      ]
+    },
+    {
+      "case_id": "retired",
+      "baseline_output": "pass",
+      "candidate_output": "fail",
+      "baseline_score": 1.0,
+      "candidate_score": 0.0,
+      "diff": -1.0,
+      "baseline_passed": true,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "legacy"
+      ]
+    }
+  ],
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "FAIL regression: upper bound exceeds max_regression (mean_diff -0.500000, 95% CI [-1.000000, 0.000000], regression upper bound 1.000000, max_regression 0.000000).",
+      "PASS pass rate: candidate meets the minimum (candidate pass rate 0.500000, minimum 0.000000).",
+      "PASS significance: require_significant is off."
+    ]
+  }
+}

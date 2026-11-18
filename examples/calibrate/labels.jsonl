@@ -1,0 +1,6 @@
+{"id": "hours", "input": "What are your support hours?", "reference": "Support is available Monday to Friday, 09:00 to 18:00 UTC.", "output": "JUDGE_CAL_HOURS", "human_score": 0.0}
+{"id": "refund", "input": "What is your refund policy?", "reference": "Refunds are available within 30 days for unused items in original packaging.", "output": "JUDGE_CAL_REFUND", "human_score": 0.0}
+{"id": "shipping", "input": "How long does standard shipping take?", "reference": "Standard shipping takes 5 business days.", "output": "JUDGE_CAL_SHIP", "human_score": 0.0}
+{"id": "password", "input": "How do I reset my password?", "reference": "Go to Settings, choose Security, then Reset password.", "output": "JUDGE_CAL_PASSWORD", "human_score": 0.0}
+{"id": "export", "input": "How do I export my data?", "reference": "Open Settings, choose Privacy, then Export data.", "output": "JUDGE_CAL_EXPORT", "human_score": 1.0}
+{"id": "delete", "input": "How do I delete my account?", "reference": "Open Settings, choose Privacy, then Delete account.", "output": "JUDGE_CAL_DELETE", "human_score": 1.0}

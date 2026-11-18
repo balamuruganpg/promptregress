@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="962" height="558" viewBox="0 0 962 558" role="img" aria-label="promptregress demo terminal output">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#181825"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <style>
+    .term { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 13px; fill: #cdd6f4; }
+    .title { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; font-size: 12px; fill: #a6adc8; }
+  </style>
+  <rect x="0" y="0" width="962" height="558" rx="12" ry="12" fill="url(#bg)" filter="url(#shadow)"/>
+  <rect x="0" y="0" width="962" height="36" rx="12" ry="12" fill="#11111b"/>
+  <rect x="0" y="24" width="962" height="12" fill="#11111b"/>
+  <circle cx="22" cy="18.0" r="5" fill="#ff5f56"/>
+  <circle cx="42" cy="18.0" r="5" fill="#ffbd2e"/>
+  <circle cx="62" cy="18.0" r="5" fill="#27c93f"/>
+  <text x="481.0" y="22.0" text-anchor="middle" class="title">promptregress demo</text>
+  <text x="18" y="63" class="term"><tspan fill="#dcdcaa" font-weight="700">PromptRegress demo</tspan></text>
+<text x="18" y="81" class="term"><tspan fill="#9cdcfe">provider</tspan>=<tspan fill="#ce9178">mock</tspan></text>
+<text x="18" y="99" class="term"><tspan fill="#9cdcfe">baseline_template</tspan>=<tspan fill="#ce9178">&#x27;Answer completely.\n{input}&#x27;</tspan></text>
+<text x="18" y="117" class="term"><tspan fill="#9cdcfe">candidate_template</tspan>=<tspan fill="#ce9178">&#x27;Answer briefly.\n{input}&#x27;</tspan></text>
+<text x="18" y="135" class="term"><tspan fill="#9cdcfe">max_regression</tspan>=<tspan fill="#ce9178">0</tspan></text>
+<text x="18" y="153" class="term"><tspan fill="#9cdcfe">suite</tspan>=<tspan fill="#ce9178">support_qa</tspan></text>
+<text x="18" y="171" class="term"><tspan fill="#9cdcfe">baseline</tspan>=<tspan fill="#ce9178">baseline</tspan></text>
+<text x="18" y="189" class="term"><tspan fill="#9cdcfe">candidate</tspan>=<tspan fill="#ce9178">candidate</tspan></text>
+<text x="18" y="207" class="term"><tspan fill="#9cdcfe">baseline_mean</tspan>=<tspan fill="#b5cea8">1.000000</tspan></text>
+<text x="18" y="225" class="term"><tspan fill="#9cdcfe">candidate_mean</tspan>=<tspan fill="#b5cea8">0.785714</tspan></text>
+<text x="18" y="243" class="term"><tspan fill="#9cdcfe">mean_diff</tspan>=<tspan fill="#ce9178">-0.214286</tspan></text>
+<text x="18" y="261" class="term"><tspan fill="#9cdcfe">ci_low</tspan>=<tspan fill="#ce9178">-0.428571</tspan></text>
+<text x="18" y="279" class="term"><tspan fill="#9cdcfe">ci_high</tspan>=<tspan fill="#ce9178">0.000000</tspan></text>
+<text x="18" y="297" class="term"><tspan fill="#9cdcfe">mcnemar_p</tspan>=<tspan fill="#ce9178">0.250000</tspan></text>
+<text x="18" y="315" class="term"><tspan fill="#9cdcfe">mcnemar_b</tspan>=<tspan fill="#ce9178">3</tspan></text>
+<text x="18" y="333" class="term"><tspan fill="#9cdcfe">mcnemar_c</tspan>=<tspan fill="#ce9178">0</tspan></text>
+<text x="18" y="351" class="term"><tspan fill="#9cdcfe">wins</tspan>=<tspan fill="#ce9178">0</tspan></text>
+<text x="18" y="369" class="term"><tspan fill="#9cdcfe">losses</tspan>=<tspan fill="#ce9178">3</tspan></text>
+<text x="18" y="387" class="term"><tspan fill="#9cdcfe">ties</tspan>=<tspan fill="#ce9178">11</tspan></text>
+<text x="18" y="405" class="term">gate_passed=<tspan fill="#ff6b6b" font-weight="700">false</tspan></text>
+<text x="18" y="423" class="term"><tspan fill="#c586c0">reasons:</tspan></text>
+<text x="18" y="441" class="term">- <tspan fill="#ff6b6b" font-weight="700">FAIL</tspan> regression: upper bound exceeds max_regression (mean_diff -0.214286, 95% CI</text>
+<text x="18" y="459" class="term">  [-0.428571, 0.000000], regression upper bound 0.428571, max_regression 0.000000).</text>
+<text x="18" y="477" class="term"><tspan fill="#c586c0">per_case:</tspan></text>
+<text x="18" y="495" class="term">- password_reset baseline=1.000000 candidate=0.000000 diff=-1.000000 baseline_passed=true candidate_passed=false <tspan fill="#ff6b6b">loss</tspan></text>
+<text x="18" y="513" class="term">- refund_policy baseline=1.000000 candidate=0.000000 diff=-1.000000 baseline_passed=true candidate_passed=false <tspan fill="#ff6b6b">loss</tspan></text>
+<text x="18" y="531" class="term">- shipping_time baseline=1.000000 candidate=0.000000 diff=-1.000000 baseline_passed=true candidate_passed=false <tspan fill="#ff6b6b">loss</tspan></text>
+</svg>

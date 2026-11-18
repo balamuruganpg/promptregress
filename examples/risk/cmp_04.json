@@ -1,0 +1,861 @@
+{
+  "suite_name": "risk-suite",
+  "baseline": {
+    "suite_name": "risk-suite",
+    "config_name": "baseline-3",
+    "mean_score": 0.5972500000000001,
+    "pass_rate": 0.5,
+    "total_latency_ms": 3360.0,
+    "mean_latency_ms": 280.0,
+    "p95_latency_ms": 594.25,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "risk_0",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_1",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_2",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_3",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_4",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "risk_0",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.232,
+          "contains": 0.232
+        },
+        "score": 0.232,
+        "passed": false,
+        "latency_ms": 483.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_0",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.9
+        },
+        "score": 0.9,
+        "passed": true,
+        "latency_ms": 12.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 0"
+      },
+      {
+        "case_id": "risk_1",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.252,
+          "contains": 0.252
+        },
+        "score": 0.252,
+        "passed": false,
+        "latency_ms": 508.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_1",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.905
+        },
+        "score": 0.905,
+        "passed": true,
+        "latency_ms": 13.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 1"
+      },
+      {
+        "case_id": "risk_2",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.272,
+          "contains": 0.272
+        },
+        "score": 0.272,
+        "passed": false,
+        "latency_ms": 533.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_2",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.91
+        },
+        "score": 0.91,
+        "passed": true,
+        "latency_ms": 14.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 2"
+      },
+      {
+        "case_id": "risk_3",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.29200000000000004,
+          "contains": 0.29200000000000004
+        },
+        "score": 0.29200000000000004,
+        "passed": false,
+        "latency_ms": 558.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_3",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.915
+        },
+        "score": 0.915,
+        "passed": true,
+        "latency_ms": 15.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 3"
+      },
+      {
+        "case_id": "risk_4",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.312,
+          "contains": 0.312
+        },
+        "score": 0.312,
+        "passed": false,
+        "latency_ms": 583.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_4",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.92
+        },
+        "score": 0.92,
+        "passed": true,
+        "latency_ms": 16.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 4"
+      },
+      {
+        "case_id": "risk_5",
+        "output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+        "scores": {
+          "levenshtein": 0.332,
+          "contains": 0.332
+        },
+        "score": 0.332,
+        "passed": false,
+        "latency_ms": 608.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_5",
+        "output": "Open 9 to 5.",
+        "scores": {
+          "exact_match": 0.925
+        },
+        "score": 0.925,
+        "passed": true,
+        "latency_ms": 17.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 5"
+      }
+    ]
+  },
+  "candidate": {
+    "suite_name": "risk-suite",
+    "config_name": "candidate-3",
+    "mean_score": 0.50225,
+    "pass_rate": 0.5,
+    "total_latency_ms": 60.0,
+    "mean_latency_ms": 5.0,
+    "p95_latency_ms": 5.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "risk_0",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_1",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_2",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_3",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "risk_4",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "risk_0",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.032
+        },
+        "score": 0.032,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_0",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.91
+        },
+        "score": 0.91,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 0"
+      },
+      {
+        "case_id": "risk_1",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.05199999999999999
+        },
+        "score": 0.05199999999999999,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_1",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.915
+        },
+        "score": 0.915,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 1"
+      },
+      {
+        "case_id": "risk_2",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.07200000000000001
+        },
+        "score": 0.07200000000000001,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_2",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.92
+        },
+        "score": 0.92,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 2"
+      },
+      {
+        "case_id": "risk_3",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.09200000000000003
+        },
+        "score": 0.09200000000000003,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_3",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.925
+        },
+        "score": 0.925,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 3"
+      },
+      {
+        "case_id": "risk_4",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.11199999999999999
+        },
+        "score": 0.11199999999999999,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow",
+          "edge"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_4",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.93
+        },
+        "score": 0.93,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 4"
+      },
+      {
+        "case_id": "risk_5",
+        "output": "shorter reply",
+        "scores": {
+          "exact_match": 0.132
+        },
+        "score": 0.132,
+        "passed": false,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [
+          "billing",
+          "slow"
+        ],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "refund request refund request refund request refund request refund request refund request refund request refund request refund request refund request w3"
+      },
+      {
+        "case_id": "safe_5",
+        "output": "Open 9 to 5 daily.",
+        "scores": {
+          "exact_match": 0.935
+        },
+        "score": 0.935,
+        "passed": true,
+        "latency_ms": 5.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1,
+        "case_input": "store hours 5"
+      }
+    ]
+  },
+  "mean_diff": -0.09500000000000001,
+  "ci_low": -0.1475,
+  "ci_high": -0.0425,
+  "alpha": 0.05,
+  "ci_method": "percentile",
+  "mcnemar_p": 1.0,
+  "mcnemar_b": 0,
+  "mcnemar_c": 0,
+  "wilcoxon_stat": 21.0,
+  "wilcoxon_p": 0.16162109375,
+  "ttest_stat": -3.0007557627025045,
+  "ttest_df": 11.0,
+  "ttest_p": 0.012063533397567027,
+  "cohens_dz": -0.8662435736843059,
+  "effect_size_label": "large",
+  "wins": 6,
+  "losses": 6,
+  "ties": 0,
+  "slices": [
+    {
+      "tag": "billing",
+      "n": 6,
+      "mean_diff": -0.20000000000000004,
+      "ci_low": -0.19999999999999998,
+      "ci_high": -0.19999999999999998,
+      "wins": 0,
+      "losses": 6,
+      "ties": 0
+    },
+    {
+      "tag": "edge",
+      "n": 3,
+      "mean_diff": -0.20000000000000004,
+      "ci_low": -0.20000000000000004,
+      "ci_high": -0.20000000000000004,
+      "wins": 0,
+      "losses": 3,
+      "ties": 0
+    },
+    {
+      "tag": "slow",
+      "n": 6,
+      "mean_diff": -0.20000000000000004,
+      "ci_low": -0.19999999999999998,
+      "ci_high": -0.19999999999999998,
+      "wins": 0,
+      "losses": 6,
+      "ties": 0
+    }
+  ],
+  "details": [],
+  "per_case": [
+    {
+      "case_id": "risk_0",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.232,
+      "candidate_score": 0.032,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow",
+        "edge"
+      ]
+    },
+    {
+      "case_id": "safe_0",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.9,
+      "candidate_score": 0.91,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "risk_1",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.252,
+      "candidate_score": 0.05199999999999999,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow"
+      ]
+    },
+    {
+      "case_id": "safe_1",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.905,
+      "candidate_score": 0.915,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "risk_2",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.272,
+      "candidate_score": 0.07200000000000001,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow",
+        "edge"
+      ]
+    },
+    {
+      "case_id": "safe_2",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.91,
+      "candidate_score": 0.92,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "risk_3",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.29200000000000004,
+      "candidate_score": 0.09200000000000003,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow"
+      ]
+    },
+    {
+      "case_id": "safe_3",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.915,
+      "candidate_score": 0.925,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "risk_4",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.312,
+      "candidate_score": 0.11199999999999999,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow",
+        "edge"
+      ]
+    },
+    {
+      "case_id": "safe_4",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.92,
+      "candidate_score": 0.93,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    },
+    {
+      "case_id": "risk_5",
+      "baseline_output": "partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply partial reply w3",
+      "candidate_output": "shorter reply",
+      "baseline_score": 0.332,
+      "candidate_score": 0.132,
+      "diff": -0.2,
+      "baseline_passed": false,
+      "candidate_passed": false,
+      "outcome": "loss",
+      "tags": [
+        "billing",
+        "slow"
+      ]
+    },
+    {
+      "case_id": "safe_5",
+      "baseline_output": "Open 9 to 5.",
+      "candidate_output": "Open 9 to 5 daily.",
+      "baseline_score": 0.925,
+      "candidate_score": 0.935,
+      "diff": 0.010000000000000009,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    }
+  ],
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "FAIL regression: upper bound exceeds max_regression (mean_diff -0.095000, 95% CI [-0.147500, -0.042500], regression upper bound 0.147500, max_regression 0.000000).",
+      "PASS pass rate: candidate meets the minimum (candidate pass rate 0.500000, minimum 0.000000).",
+      "PASS significance: require_significant is off."
+    ]
+  }
+}

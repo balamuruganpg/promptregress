@@ -1,0 +1,303 @@
+{
+  "name": "traces",
+  "description": "Agent tasks scored with trace_match. Each case expects an ordered tool trace. Arg values match as case-sensitive substrings.",
+  "cases": [
+    {
+      "id": "refund",
+      "input": "id: refund\nSupport agent. The customer wants a refund for order 1001. Search the knowledge base, load the order, and issue the refund.",
+      "reference": "[{\"tool\": \"search_kb\", \"args\": {\"query\": \"refund policy\"}}, {\"tool\": \"get_order\", \"args\": {\"order_id\": \"1001\"}}, {\"tool\": \"issue_refund\", \"args\": {\"order_id\": \"1001\", \"amount\": \"20.00\"}}]",
+      "tags": [
+        "support",
+        "billing"
+      ],
+      "metadata": {
+        "agent": "support"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "search_kb",
+              "args": {
+                "query": "refund policy"
+              }
+            },
+            {
+              "tool": "get_order",
+              "args": {
+                "order_id": "1001"
+              }
+            },
+            {
+              "tool": "issue_refund",
+              "args": {
+                "order_id": "1001",
+                "amount": "20.00"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shipping",
+      "input": "id: shipping-status\nSupport agent. Tell the customer where parcel 1Z999 is. Search shipping notes, load the shipment, and email Ada.",
+      "reference": "[{\"tool\": \"search_kb\", \"args\": {\"query\": \"shipping status\"}}, {\"tool\": \"get_shipment\", \"args\": {\"tracking\": \"1Z999\"}}, {\"tool\": \"email_customer\", \"args\": {\"to\": \"ada@example.com\"}}]",
+      "tags": [
+        "support",
+        "shipping"
+      ],
+      "metadata": {
+        "agent": "support"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "search_kb",
+              "args": {
+                "query": "shipping status"
+              }
+            },
+            {
+              "tool": "get_shipment",
+              "args": {
+                "tracking": "1Z999"
+              }
+            },
+            {
+              "tool": "email_customer",
+              "args": {
+                "to": "ada@example.com"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sales_chart",
+      "input": "id: sales-chart\nData agent. Plot last quarter revenue. Query the warehouse, draw a bar chart, and export a csv.",
+      "reference": "[{\"tool\": \"query_db\", \"args\": {\"sql\": \"select revenue\"}}, {\"tool\": \"chart\", \"args\": {\"kind\": \"bar\"}}, {\"tool\": \"export\", \"args\": {\"format\": \"csv\"}}]",
+      "tags": [
+        "data",
+        "analytics"
+      ],
+      "metadata": {
+        "agent": "data"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "query_db",
+              "args": {
+                "sql": "select revenue"
+              }
+            },
+            {
+              "tool": "chart",
+              "args": {
+                "kind": "bar"
+              }
+            },
+            {
+              "tool": "export",
+              "args": {
+                "format": "csv"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "churn",
+      "input": "id: churn-trend\nData agent. Plot monthly churn. Query the warehouse, draw a line chart, and export a png.",
+      "reference": "[{\"tool\": \"query_db\", \"args\": {\"sql\": \"select churn\"}}, {\"tool\": \"chart\", \"args\": {\"kind\": \"line\"}}, {\"tool\": \"export\", \"args\": {\"format\": \"png\"}}]",
+      "tags": [
+        "data",
+        "retention"
+      ],
+      "metadata": {
+        "agent": "data"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "query_db",
+              "args": {
+                "sql": "select churn"
+              }
+            },
+            {
+              "tool": "chart",
+              "args": {
+                "kind": "line"
+              }
+            },
+            {
+              "tool": "export",
+              "args": {
+                "format": "png"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "incident",
+      "input": "id: checkout-incident\nOps agent. Checkout error rate spiked. Search logs, page the payments on-call, and open a sev2 ticket.",
+      "reference": "[{\"tool\": \"search_logs\", \"args\": {\"service\": \"checkout\"}}, {\"tool\": \"page_oncall\", \"args\": {\"team\": \"payments\"}}, {\"tool\": \"open_ticket\", \"args\": {\"severity\": \"sev2\"}}]",
+      "tags": [
+        "ops",
+        "reliability"
+      ],
+      "metadata": {
+        "agent": "ops"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "search_logs",
+              "args": {
+                "service": "checkout"
+              }
+            },
+            {
+              "tool": "page_oncall",
+              "args": {
+                "team": "payments"
+              }
+            },
+            {
+              "tool": "open_ticket",
+              "args": {
+                "severity": "sev2"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "schedule",
+      "input": "id: design-review\nCalendar agent. Book a 30 minute design review. List events, find an open slot, and create the meeting.",
+      "reference": "[{\"tool\": \"list_events\", \"args\": {\"calendar\": \"primary\"}}, {\"tool\": \"find_slot\", \"args\": {\"duration\": \"30m\"}}, {\"tool\": \"book_meeting\", \"args\": {\"title\": \"design review\"}}]",
+      "tags": [
+        "calendar",
+        "ops"
+      ],
+      "metadata": {
+        "agent": "calendar"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "list_events",
+              "args": {
+                "calendar": "primary"
+              }
+            },
+            {
+              "tool": "find_slot",
+              "args": {
+                "duration": "30m"
+              }
+            },
+            {
+              "tool": "book_meeting",
+              "args": {
+                "title": "design review"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "invoice",
+      "input": "id: invoice-credit\nBilling agent. Apply a 15 dollar credit to invoice INV-44 and notify the customer by email.",
+      "reference": "[{\"tool\": \"get_invoice\", \"args\": {\"invoice_id\": \"INV-44\"}}, {\"tool\": \"apply_credit\", \"args\": {\"amount\": \"15.00\"}}, {\"tool\": \"notify_customer\", \"args\": {\"channel\": \"email\"}}]",
+      "tags": [
+        "billing",
+        "finance"
+      ],
+      "metadata": {
+        "agent": "billing"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "get_invoice",
+              "args": {
+                "invoice_id": "INV-44"
+              }
+            },
+            {
+              "tool": "apply_credit",
+              "args": {
+                "amount": "15.00"
+              }
+            },
+            {
+              "tool": "notify_customer",
+              "args": {
+                "channel": "email"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "input": "id: eval-notes\nResearch agent. Read the public eval notes. Search the web, fetch the page, and summarize in bullets.",
+      "reference": "[{\"tool\": \"search_web\", \"args\": {\"query\": \"prompt regression\"}}, {\"tool\": \"fetch_page\", \"args\": {\"url\": \"https://example.com/eval\"}}, {\"tool\": \"summarize\", \"args\": {\"style\": \"bullet\"}}]",
+      "tags": [
+        "research",
+        "data"
+      ],
+      "metadata": {
+        "agent": "research"
+      },
+      "assertions": [
+        {
+          "kind": "trace_match",
+          "value": [
+            {
+              "tool": "search_web",
+              "args": {
+                "query": "prompt regression"
+              }
+            },
+            {
+              "tool": "fetch_page",
+              "args": {
+                "url": "https://example.com/eval"
+              }
+            },
+            {
+              "tool": "summarize",
+              "args": {
+                "style": "bullet"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

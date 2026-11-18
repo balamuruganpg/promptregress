@@ -1,0 +1,17 @@
+bayes
+comparison=examples/bayes/comparison.json
+n=6
+n11=2
+n10=4
+n01=0
+n00=0
+observed_diff=-0.666667
+posterior_mean=-0.400000
+ci_level=0.950000
+ci_low=-0.754931
+ci_high=0.024489
+p_worse=0.968750
+delta=0.050000
+p_worse_than_delta=0.951522
+seed=13
+note=The cells are counted from the stored passed bit on each paired case, the same bit McNemar uses. n11 is both pass, n10 is baseline only (McNemar b), n01 is candidate only (McNemar c), n00 is both fail. The prior is Dirichlet(1, 1, 1, 1) on those four cell probabilities. The posterior is Dirichlet(1+n11, 1+n10, 1+n01, 1+n00). d = p01 - p10, which is the candidate pass probability minus the baseline pass probability. A negative d means the candidate is worse. observed_diff is (n01 - n10) / n. posterior_mean is (n01 - n10) / (n + 4). ci_low and ci_high are the equal-tailed central quantiles at ci_level 0.95 (0.025 and 0.975), not a highest-posterior-density interval. p_worse is P(d < 0). p_worse_than_delta is P(d < -delta). Conditional on the discordant total, p01 / (p01 + p10) is Beta(1+n01, 1+n10), and the discordant mass p01 + p10 is Beta(n01+n10+2, n00+n11+2), independent of the split. d = (2φ - 1) θ under that representation. P(d < 0) is the regularized incomplete beta I_{1/2}(1+n01, 1+n10). Other probabilities integrate the split's beta density against the discordant-mass beta with deterministic Gauss-Legendre quadrature. No Monte Carlo draw is used. seed is stored and is not an input to the math. The posterior is over this suite's paired outcomes under a uniform Dirichlet prior. It is not a guarantee about unseen cases, and it does not change the gate. Text rounds to 6 decimals. JSON keeps the stored floats.

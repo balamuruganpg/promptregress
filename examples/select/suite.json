@@ -1,0 +1,70 @@
+{
+  "name": "select-demo",
+  "description": "Source suite for active selection. billing flips pass-to-fail in every saved comparison. latency flips once and also drops while still passing. greeting stays a pass with score 1. unseen has no comparison history. The comparisons also record retired, which is not in the source suite.",
+  "cases": [
+    {
+      "id": "unseen",
+      "input": "Where is my order?",
+      "reference": "Track the order from the orders page.",
+      "tags": [
+        "shipping"
+      ],
+      "metadata": {
+        "planted": "no-history"
+      },
+      "assertions": [
+        {
+          "kind": "exact_match"
+        }
+      ]
+    },
+    {
+      "id": "greeting",
+      "input": "Say hello.",
+      "reference": "Hello.",
+      "tags": [
+        "tone"
+      ],
+      "metadata": {
+        "planted": "stable"
+      },
+      "assertions": [
+        {
+          "kind": "exact_match"
+        }
+      ]
+    },
+    {
+      "id": "latency",
+      "input": "Why is the page slow?",
+      "reference": "The page loads in under two seconds.",
+      "tags": [
+        "perf"
+      ],
+      "metadata": {
+        "planted": "flaky-score"
+      },
+      "assertions": [
+        {
+          "kind": "exact_match"
+        }
+      ]
+    },
+    {
+      "id": "billing",
+      "input": "What is the billing cycle?",
+      "reference": "Bills are issued on the first of the month.",
+      "tags": [
+        "account"
+      ],
+      "metadata": {
+        "planted": "pass-to-fail"
+      },
+      "assertions": [
+        {
+          "kind": "exact_match"
+        }
+      ]
+    }
+  ]
+}

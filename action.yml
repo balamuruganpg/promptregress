@@ -1,0 +1,239 @@
+name: PromptRegress gate
+description: >
+  Compare a baseline and a candidate on one suite and fail the step when the
+  regression gate fails. Checkout is the caller's job; this action does not
+  check out the repository. It sets up Python, installs promptregress from
+  this repo when action.yml lives next to pyproject.toml (including
+  uses: ./), and otherwise installs promptregress from PyPI. JSON, Markdown,
+  and HTML reports are uploaded as artifacts when those paths are set.
+
+inputs:
+  suite:
+    description: Path to the eval suite, relative to the workspace.
+    required: true
+  baseline-config:
+    description: >
+      Baseline prompt template, or a path to a YAML file with a string
+      template field. A YAML file may also set provider, model, mock_default,
+      and mock_rules. When both configs set provider, they must match:
+      compare uses one provider.
+    required: true
+  candidate-config:
+    description: >
+      Candidate prompt template, or a path to a YAML file with a string
+      template field. Provider settings are read from this file only when
+      the baseline config does not set them.
+    required: true
+  max-regression:
+    description: >
+      Fail when the bootstrap upper bound on the score drop exceeds this value.
+    required: false
+    default: "0"
+  python-version:
+    description: Python version passed to actions/setup-python.
+    required: false
+    default: "3.12"
+  provider:
+    description: >
+      mock, echo, or openai. Used when neither config file sets provider.
+    required: false
+    default: echo
+  mock-rules:
+    description: >
+      JSON list of [needle, response] pairs, or a path to that JSON file.
+      Used when neither config file sets mock_rules.
+    required: false
+    default: ""
+  mock-default:
+    description: MockProvider default reply when neither config file sets mock_default.
+    required: false
+    default: ""
+  report-json:
+    description: Write the JSON report here. Uploaded as an artifact when set.
+    required: false
+    default: ""
+  report-md:
+    description: Write the Markdown report here. Uploaded as an artifact when set.
+    required: false
+    default: ""
+  report-html:
+    description: Write the HTML report here. Uploaded as an artifact when set.
+    required: false
+    default: ""
+
+outputs:
+  exit-code:
+    description: >
+      Exit code from promptregress compare. 1 means the gate failed. 2 means
+      the suite or the arguments were rejected.
+    value: ${{ steps.compare.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install promptregress
+      shell: bash
+      run: |
+        if [ -f "$GITHUB_ACTION_PATH/pyproject.toml" ]; then
+          python -m pip install "$GITHUB_ACTION_PATH"
+        else
+          python -m pip install promptregress
+        fi
+
+    - name: Compare baseline and candidate
+      id: compare
+      shell: bash
+      env:
+        SUITE: ${{ inputs.suite }}
+        BASELINE_CONFIG: ${{ inputs.baseline-config }}
+        CANDIDATE_CONFIG: ${{ inputs.candidate-config }}
+        MAX_REGRESSION: ${{ inputs.max-regression }}
+        PROVIDER: ${{ inputs.provider }}
+        MOCK_RULES: ${{ inputs.mock-rules }}
+        MOCK_DEFAULT: ${{ inputs.mock-default }}
+        REPORT_JSON: ${{ inputs.report-json }}
+        REPORT_MD: ${{ inputs.report-md }}
+        REPORT_HTML: ${{ inputs.report-html }}
+      run: |
+        python - <<'PY'
+        import json
+        import os
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        import yaml
+
+        def record(code: int) -> None:
+            output = os.environ.get("GITHUB_OUTPUT")
+            if output:
+                with open(output, "a", encoding="utf-8") as handle:
+                    handle.write(f"exit-code={code}\n")
+            runner_temp = os.environ.get("RUNNER_TEMP")
+            if runner_temp:
+                path = Path(runner_temp) / "promptregress-gate-exit"
+                path.write_text(f"{code}\n", encoding="utf-8")
+
+        def fail(message: str) -> None:
+            print(f"error: {message}", file=sys.stderr)
+            record(2)
+            raise SystemExit(2)
+
+        def load_config(value: str) -> dict:
+            path = Path(value)
+            if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}:
+                try:
+                    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+                except yaml.YAMLError as exc:
+                    fail(f"{value} is not valid YAML: {exc}")
+                if not isinstance(loaded, dict) or not isinstance(loaded.get("template"), str):
+                    fail(f"{value} must be a mapping with a string template")
+                return loaded
+            if path.is_file():
+                return {"template": path.read_text(encoding="utf-8")}
+            return {"template": value}
+
+        def pick(baseline: dict, candidate: dict, key: str, fallback: str) -> str:
+            left = baseline.get(key)
+            right = candidate.get(key)
+            if key == "provider" and left is not None and right is not None and left != right:
+                fail(
+                    f"baseline provider {left!r} and candidate provider {right!r} differ; "
+                    "compare uses one provider"
+                )
+            chosen = left if left not in (None, "") else right
+            if chosen in (None, ""):
+                return fallback
+            if not isinstance(chosen, str):
+                fail(f"{key} must be a string")
+            return chosen
+
+        def rules_json(baseline: dict, candidate: dict, raw: str) -> str:
+            for source in (baseline, candidate):
+                rules = source.get("mock_rules")
+                if rules is not None:
+                    return json.dumps(rules)
+            if raw == "":
+                return ""
+            path = Path(raw)
+            if path.is_file():
+                return path.read_text(encoding="utf-8")
+            return raw
+
+        baseline = load_config(os.environ["BASELINE_CONFIG"])
+        candidate = load_config(os.environ["CANDIDATE_CONFIG"])
+        provider = pick(baseline, candidate, "provider", os.environ.get("PROVIDER") or "echo")
+        mock_default = pick(
+            baseline, candidate, "mock_default", os.environ.get("MOCK_DEFAULT") or ""
+        )
+        baseline_template = baseline["template"]
+        candidate_template = candidate["template"]
+        if baseline_template == "":
+            fail("baseline config is missing a template")
+        if candidate_template == "":
+            fail("candidate config is missing a template")
+        command = [
+            sys.executable,
+            "-m",
+            "promptregress",
+            "compare",
+            os.environ["SUITE"],
+            "--provider",
+            provider,
+            "--baseline-template",
+            baseline_template,
+            "--candidate-template",
+            candidate_template,
+            "--max-regression",
+            os.environ.get("MAX_REGRESSION") or "0",
+            "--no-history",
+        ]
+        rules = rules_json(baseline, candidate, os.environ.get("MOCK_RULES") or "")
+        if rules:
+            command.extend(["--mock-rules", rules])
+        if mock_default:
+            command.extend(["--mock-default", mock_default])
+        model = pick(baseline, candidate, "model", "")
+        if model:
+            command.extend(["--model", model])
+        for flag, env_name in (
+            ("--report-json", "REPORT_JSON"),
+            ("--report-md", "REPORT_MD"),
+            ("--report-html", "REPORT_HTML"),
+        ):
+            report_path = os.environ.get(env_name) or ""
+            if report_path:
+                command.extend([flag, report_path])
+        completed = subprocess.run(command)
+        record(completed.returncode)
+        raise SystemExit(completed.returncode)
+        PY
+
+    - name: Upload JSON report
+      if: always() && inputs.report-json != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: promptregress-report-json
+        path: ${{ inputs.report-json }}
+        if-no-files-found: warn
+
+    - name: Upload Markdown report
+      if: always() && inputs.report-md != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: promptregress-report-markdown
+        path: ${{ inputs.report-md }}
+        if-no-files-found: warn
+
+    - name: Upload HTML report
+      if: always() && inputs.report-html != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: promptregress-report-html
+        path: ${{ inputs.report-html }}
+        if-no-files-found: warn

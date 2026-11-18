@@ -1,0 +1,217 @@
+{
+  "suite_name": "pareto-demo",
+  "baseline": {
+    "suite_name": "pareto-demo",
+    "config_name": "cheap",
+    "mean_score": 0.5,
+    "pass_rate": 0.5,
+    "total_latency_ms": 40.0,
+    "mean_latency_ms": 20.0,
+    "p95_latency_ms": 29.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "c0",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "c1",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "c0",
+        "output": "out",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 10.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "c1",
+        "output": "out",
+        "scores": {
+          "exact_match": 0.0
+        },
+        "score": 0.0,
+        "passed": false,
+        "latency_ms": 30.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ],
+    "cost": {
+      "model": "small",
+      "usd": 0.01,
+      "note": null
+    }
+  },
+  "candidate": {
+    "suite_name": "pareto-demo",
+    "config_name": "quality",
+    "mean_score": 1.0,
+    "pass_rate": 1.0,
+    "total_latency_ms": 100.0,
+    "mean_latency_ms": 50.0,
+    "p95_latency_ms": 59.0,
+    "total_prompt_tokens": 0,
+    "total_completion_tokens": 0,
+    "total_tokens": 0,
+    "n_cached": 0,
+    "stability": {
+      "mean_within_case_sd": 0.0,
+      "least_stable": [
+        {
+          "case_id": "c0",
+          "score_sd": 0.0
+        },
+        {
+          "case_id": "c1",
+          "score_sd": 0.0
+        }
+      ]
+    },
+    "results": [
+      {
+        "case_id": "c0",
+        "output": "out",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 40.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      },
+      {
+        "case_id": "c1",
+        "output": "out",
+        "scores": {
+          "exact_match": 1.0
+        },
+        "score": 1.0,
+        "passed": true,
+        "latency_ms": 60.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "cached": false,
+        "error": null,
+        "tags": [],
+        "sample_scores": [],
+        "sample_outputs": [],
+        "score_sd": 0.0,
+        "n_samples": 1
+      }
+    ],
+    "cost": {
+      "model": "large",
+      "usd": 0.05,
+      "note": null
+    }
+  },
+  "mean_diff": 0.5,
+  "ci_low": 0.0,
+  "ci_high": 1.0,
+  "alpha": 0.05,
+  "ci_method": "percentile",
+  "mcnemar_p": 1.0,
+  "mcnemar_b": 0,
+  "mcnemar_c": 1,
+  "wilcoxon_stat": 1.0,
+  "wilcoxon_p": 1.0,
+  "ttest_stat": 1.0,
+  "ttest_df": 1.0,
+  "ttest_p": 0.5000000000000008,
+  "cohens_dz": 0.7071067811865475,
+  "effect_size_label": "medium",
+  "wins": 1,
+  "losses": 0,
+  "ties": 1,
+  "slices": [],
+  "details": [],
+  "per_case": [
+    {
+      "case_id": "c0",
+      "baseline_output": "out",
+      "candidate_output": "out",
+      "baseline_score": 1.0,
+      "candidate_score": 1.0,
+      "diff": 0.0,
+      "baseline_passed": true,
+      "candidate_passed": true,
+      "outcome": "tie",
+      "tags": []
+    },
+    {
+      "case_id": "c1",
+      "baseline_output": "out",
+      "candidate_output": "out",
+      "baseline_score": 0.0,
+      "candidate_score": 1.0,
+      "diff": 1.0,
+      "baseline_passed": false,
+      "candidate_passed": true,
+      "outcome": "win",
+      "tags": []
+    }
+  ],
+  "gate": {
+    "passed": true,
+    "reasons": [
+      "PASS regression: upper bound is within max_regression (mean_diff 0.500000, 95% CI [0.000000, 1.000000], regression upper bound -0.000000, max_regression 0.000000).",
+      "PASS pass rate: candidate meets the minimum (candidate pass rate 1.000000, minimum 0.000000).",
+      "PASS significance: require_significant is off."
+    ]
+  },
+  "cost": {
+    "baseline": {
+      "model": "small",
+      "usd": 0.01,
+      "note": null
+    },
+    "candidate": {
+      "model": "large",
+      "usd": 0.05,
+      "note": null
+    },
+    "delta_usd": 0.04,
+    "note": null
+  }
+}

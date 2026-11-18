@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PromptRegress comparison — support_qa</title>
+  <style>
+
+    :root {
+      color-scheme: light;
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #e4ddd2;
+      --paper: #faf7f2;
+      --card: #fffdf9;
+      --pass: #1f6b45;
+      --pass-bg: #e7f5ec;
+      --fail: #8d2b2b;
+      --fail-bg: #fdecec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1.25rem 3rem;
+      font: 16px/1.5 "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    main { max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.25rem; }
+    h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+    .lede { color: var(--muted); margin: 0; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem 1.1rem 1.15rem;
+      margin: 1rem 0;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .verdict {
+      display: inline-block;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+    }
+    .verdict.pass { color: var(--pass); background: var(--pass-bg); }
+    .verdict.fail { color: var(--fail); background: var(--fail-bg); }
+    .outcome-loss { color: var(--fail); font-weight: 600; }
+    .outcome-win { color: var(--pass); font-weight: 600; }
+    .outcome-tie { color: var(--muted); }
+    ul { margin: 0.75rem 0 0; padding-left: 1.2rem; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+    .output { max-width: 18rem; word-break: break-word; color: var(--muted); }
+    details.diff-row { margin-top: 0.75rem; }
+    details.diff-row > summary { cursor: pointer; font-weight: 600; }
+    .diff-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.55rem;
+    }
+    .diff-label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .diff-columns pre,
+    .case-input {
+      margin: 0.3rem 0 0;
+      padding: 0.55rem 0.65rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+    .summary-chart {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      align-items: center;
+      margin: 0 0 1rem;
+    }
+    .donut { width: 120px; height: auto; }
+    .means { width: min(100%, 340px); height: auto; }
+    .seg-track { stroke: var(--line); }
+    .seg-win { stroke: var(--pass); }
+    .seg-loss { stroke: var(--fail); }
+    .seg-tie { stroke: var(--muted); }
+    .bar-track { fill: var(--line); }
+    .bar-baseline { fill: var(--muted); }
+    .bar-candidate { fill: var(--pass); }
+    .bar-candidate.lower { fill: var(--fail); }
+    .means text {
+      fill: var(--ink);
+      font-size: 12px;
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .means text.label { fill: var(--muted); }
+    .legend { list-style: none; margin: 0; padding: 0; }
+    .legend li { display: flex; align-items: center; margin: 0.15rem 0; }
+    .swatch {
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 2px;
+      margin-right: 0.4rem;
+    }
+    .swatch-win { background: var(--pass); }
+    .swatch-loss { background: var(--fail); }
+    .swatch-tie { background: var(--muted); }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: flex-end;
+      margin: 0 0 0.75rem;
+    }
+    .filters label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .filters input,
+    .filters select {
+      font: inherit;
+      color: var(--ink);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.3rem 0.45rem;
+    }
+    .case-count { margin: 0 0 0.15rem; color: var(--muted); }
+    .table-scroll { overflow-x: auto; }
+    th button {
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    th.num button { text-align: right; }
+    th button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    th[aria-sort="ascending"] button::after { content: " ↑"; }
+    th[aria-sort="descending"] button::after { content: " ↓"; }
+    tbody.case.is-hidden { display: none; }
+    .case-detail td { background: var(--paper); }
+    .diff-meta { margin: 0.55rem 0 0; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>PromptRegress comparison</h1>
+      <p class="lede">Suite <code>support_qa</code></p>
+    </header>
+    <section>
+      <h2>Summary</h2>
+      <div class="summary-chart">
+        <svg class="donut" viewBox="0 0 120 120" role="img" aria-label="0 wins, 3 losses, 11 ties">
+          <circle class="seg-track" cx="60" cy="60" r="36" fill="none" stroke-width="14"/>
+          <circle class="seg-loss" cx="60" cy="60" r="36" fill="none" stroke-width="14" stroke-dasharray="48.4703 177.7244" stroke-dashoffset="-0.0000" transform="rotate(-90 60 60)"/>
+          <circle class="seg-tie" cx="60" cy="60" r="36" fill="none" stroke-width="14" stroke-dasharray="177.7244 48.4703" stroke-dashoffset="-48.4703" transform="rotate(-90 60 60)"/>
+        </svg>
+        <ul class="legend">
+          <li><span class="swatch swatch-win"></span>Wins 0</li>
+          <li><span class="swatch swatch-loss"></span>Losses 3</li>
+          <li><span class="swatch swatch-tie"></span>Ties 11</li>
+        </ul>
+        <svg class="means" viewBox="0 0 340 68" role="img" aria-label="Mean scores. Baseline baseline 1.000000. Candidate candidate 0.785714.">
+          <text class="label" x="0" y="20">Baseline</text>
+          <rect class="bar-track" x="108" y="8" width="150" height="14" rx="2"/>
+          <rect class="bar-baseline" x="108" y="8" width="150.00" height="14" rx="2"/>
+          <text x="266" y="20">1.000000</text>
+          <text class="label" x="0" y="48">Candidate</text>
+          <rect class="bar-track" x="108" y="36" width="150" height="14" rx="2"/>
+          <rect class="bar-candidate lower" x="108" y="36" width="117.86" height="14" rx="2"/>
+          <text x="266" y="48">0.785714</text>
+        </svg>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Config</th>
+            <th scope="col" class="num">Mean score</th>
+            <th scope="col" class="num">Pass rate</th>
+            <th scope="col" class="num">Total latency (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>baseline</td><td class="num">1.000000</td><td class="num">1.000000</td><td class="num">0.148172</td></tr>
+          <tr><td>candidate</td><td class="num">0.785714</td><td class="num">0.785714</td><td class="num">0.094923</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Latency and usage</h2>
+      <p>Latency is the provider call. A cache hit is 0 ms and is marked
+      cached. Token totals sum the per-case usage fields.</p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Config</th>
+            <th scope="col" class="num">Mean latency (ms)</th>
+            <th scope="col" class="num">P95 latency (ms)</th>
+            <th scope="col" class="num">Total tokens</th>
+            <th scope="col" class="num">Cached cases</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>baseline</td><td class="num">0.010584</td><td class="num">0.023566</td><td class="num">1572</td><td class="num">0</td></tr>
+          <tr><td>candidate</td><td class="num">0.006780</td><td class="num">0.013586</td><td class="num">1375</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Paired statistics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Statistic</th>
+            <th scope="col" class="num">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Mean diff (candidate - baseline)</td><td class="num">-0.214286</td></tr>
+          <tr><td>95% CI low</td><td class="num">-0.428571</td></tr>
+          <tr><td>95% CI high</td><td class="num">0.000000</td></tr>
+          <tr><td>CI method</td><td class="num">percentile</td></tr>
+          <tr><td>McNemar p-value</td><td class="num">0.250000</td></tr>
+          <tr><td>McNemar b (baseline pass, candidate fail)</td><td class="num">3</td></tr>
+          <tr><td>McNemar c (baseline fail, candidate pass)</td><td class="num">0</td></tr>
+          <tr><td>Wilcoxon W</td><td class="num">0.000000</td></tr>
+          <tr><td>Wilcoxon p-value</td><td class="num">0.250000</td></tr>
+          <tr><td>Paired t</td><td class="num">-1.882938</td></tr>
+          <tr><td>t degrees of freedom</td><td class="num">13.000000</td></tr>
+          <tr><td>Paired t p-value</td><td class="num">0.082277</td></tr>
+          <tr><td>Cohen&#x27;s dz</td><td class="num">-0.503236</td></tr>
+          <tr><td>Effect size</td><td class="num">medium</td></tr>
+          <tr><td>Wins (candidate score higher)</td><td class="num">0</td></tr>
+          <tr><td>Losses (candidate score lower)</td><td class="num">3</td></tr>
+          <tr><td>Ties</td><td class="num">11</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Slices</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Tag</th>
+            <th scope="col" class="num">n</th>
+            <th scope="col" class="num">Mean diff</th>
+            <th scope="col" class="num">95% CI low</th>
+            <th scope="col" class="num">95% CI high</th>
+            <th scope="col" class="num">Wins</th>
+            <th scope="col" class="num">Losses</th>
+            <th scope="col" class="num">Ties</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>account</td><td class="num">1</td><td class="num">-1.000000</td><td class="num">-1.000000</td><td class="num">-1.000000</td><td class="num">0</td><td class="num">1</td><td class="num">0</td></tr>
+          <tr><td>billing</td><td class="num">4</td><td class="num">-0.250000</td><td class="num">-0.750000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">1</td><td class="num">3</td></tr>
+          <tr><td>json</td><td class="num">1</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
+          <tr><td>privacy</td><td class="num">1</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
+          <tr><td>reliability</td><td class="num">1</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
+          <tr><td>security</td><td class="num">3</td><td class="num">-0.333333</td><td class="num">-1.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">1</td><td class="num">2</td></tr>
+          <tr><td>shipping</td><td class="num">3</td><td class="num">-0.333333</td><td class="num">-1.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">1</td><td class="num">2</td></tr>
+          <tr><td>support</td><td class="num">2</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0.000000</td><td class="num">0</td><td class="num">0</td><td class="num">2</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Semantic drift</h2>
+      <p>drift = 1 - cosine_similarity; cosine is clamped to [-1, 1], so drift is in [0, 2] and is reported raw. Identical output strings have drift 0.</p>
+      <p>Embedder <code>hash</code></p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Statistic</th>
+            <th scope="col" class="num">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Mean drift</td><td class="num">0.132971</td></tr>
+          <tr><td>Max drift</td><td class="num">0.711325</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Case</th>
+            <th scope="col" class="num">Drift</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>shipping_time</td><td class="num">0.711325</td></tr>
+          <tr><td>refund_policy</td><td class="num">0.666667</td></tr>
+          <tr><td>password_reset</td><td class="num">0.483602</td></tr>
+          <tr><td>cancel_subscription</td><td class="num">0.000000</td></tr>
+          <tr><td>contact_email</td><td class="num">0.000000</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Gate</h2>
+      <p><span class="verdict fail">FAIL</span></p>
+      <ul>
+        <li>FAIL regression: upper bound exceeds max_regression (mean_diff -0.214286, 95% CI [-0.428571, 0.000000], regression upper bound 0.428571, max_regression 0.000000).</li>
+        <li>PASS pass rate: candidate meets the minimum (candidate pass rate 0.785714, minimum 0.000000).</li>
+        <li>PASS significance: require_significant is off.</li>
+      </ul>
+    </section>
+    <section id="case-results">
+      <h2>Per-case results</h2>
+      <div class="filters">
+        <label>Search
+          <input type="search" id="case-search" placeholder="Case id or input">
+        </label>
+        <label>Outcome
+          <select id="case-outcome">
+            <option value="all" selected>all</option>
+            <option value="win">wins</option>
+            <option value="loss">losses</option>
+            <option value="tie">ties</option>
+            <option value="failure">failures</option>
+          </select>
+        </label>
+        <label>Tag
+          <select id="case-tag">
+            <option value="" selected>all tags</option>
+            <option value="account">account</option>
+            <option value="billing">billing</option>
+            <option value="json">json</option>
+            <option value="privacy">privacy</option>
+            <option value="reliability">reliability</option>
+            <option value="security">security</option>
+            <option value="shipping">shipping</option>
+            <option value="support">support</option>
+          </select>
+        </label>
+        <p class="case-count" id="case-count" data-shown="14" data-total="14"><span id="case-shown">14</span> of <span id="case-total">14</span> cases</p>
+      </div>
+      <div class="table-scroll">
+      <table id="case-table">
+        <thead>
+          <tr>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="case-id">Case</button></th>
+            <th scope="col" class="num" aria-sort="none"><button type="button" data-sort="baseline-score">Baseline score</button></th>
+            <th scope="col" class="num" aria-sort="none"><button type="button" data-sort="candidate-score">Candidate score</button></th>
+            <th scope="col" class="num" aria-sort="none"><button type="button" data-sort="delta">Delta</button></th>
+            <th scope="col" class="num" aria-sort="none"><button type="button" data-sort="drift">Drift</button></th>
+            <th scope="col" class="num" aria-sort="none"><button type="button" data-sort="latency">Latency (ms)</button></th>
+            <th scope="col">Baseline passed</th>
+            <th scope="col">Candidate passed</th>
+            <th scope="col">Outcome</th>
+            <th scope="col">Baseline output</th>
+            <th scope="col">Candidate output</th>
+          </tr>
+        </thead>
+        <tbody class="case" data-index="0" data-case-id="password_reset" data-baseline-score="1.000000" data-candidate-score="0.000000" data-delta="-1.000000" data-drift="0.483602" data-latency="0.005599" data-outcome="loss" data-failure="true" data-tags="[&quot;account&quot;, &quot;security&quot;]" data-search="password_reset How do I reset my password?">
+          <tr>
+            <td>password_reset</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">-1.000000</td>
+            <td class="num">0.483602</td>
+            <td class="num">0.005599</td>
+            <td>true</td>
+            <td>false</td>
+            <td class="outcome-loss">loss</td>
+            <td class="output">Go to Settings, choose Security, then Reset password. Use the email link within 30 minutes.</td>
+            <td class="output">Use the reset link.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta -1.000000 · drift 0.483602</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How do I reset my password?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Go to Settings, choose Security, then Reset password. Use the email link within 30 minutes.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Use the reset link.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="1" data-case-id="refund_policy" data-baseline-score="1.000000" data-candidate-score="0.000000" data-delta="-1.000000" data-drift="0.666667" data-latency="0.005017" data-outcome="loss" data-failure="true" data-tags="[&quot;billing&quot;]" data-search="refund_policy What is your refund policy?">
+          <tr>
+            <td>refund_policy</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">-1.000000</td>
+            <td class="num">0.666667</td>
+            <td class="num">0.005017</td>
+            <td>true</td>
+            <td>false</td>
+            <td class="outcome-loss">loss</td>
+            <td class="output">Refunds are available within 30 days for unused items in original packaging.</td>
+            <td class="output">We offer refunds.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta -1.000000 · drift 0.666667</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">What is your refund policy?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Refunds are available within 30 days for unused items in original packaging.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>We offer refunds.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="2" data-case-id="shipping_time" data-baseline-score="1.000000" data-candidate-score="0.000000" data-delta="-1.000000" data-drift="0.711325" data-latency="0.026690" data-outcome="loss" data-failure="true" data-tags="[&quot;shipping&quot;]" data-search="shipping_time How long does standard shipping take?">
+          <tr>
+            <td>shipping_time</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">-1.000000</td>
+            <td class="num">0.711325</td>
+            <td class="num">0.026690</td>
+            <td>true</td>
+            <td>false</td>
+            <td class="outcome-loss">loss</td>
+            <td class="output">Standard shipping takes 5 business days.</td>
+            <td class="output">Shipping varies.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta -1.000000 · drift 0.711325</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How long does standard shipping take?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Standard shipping takes 5 business days.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Shipping varies.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="3" data-case-id="track_order" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.005999" data-outcome="tie" data-failure="false" data-tags="[&quot;shipping&quot;]" data-search="track_order Where can I track my order?">
+          <tr>
+            <td>track_order</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.005999</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Open Orders and select Track shipment to see the carrier status.</td>
+            <td class="output">Open Orders and select Track shipment to see the carrier status.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">Where can I track my order?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Open Orders and select Track shipment to see the carrier status.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Open Orders and select Track shipment to see the carrier status.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="4" data-case-id="cancel_subscription" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.005188" data-outcome="tie" data-failure="false" data-tags="[&quot;billing&quot;]" data-search="cancel_subscription How do I cancel my subscription?">
+          <tr>
+            <td>cancel_subscription</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.005188</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Open Billing, choose Manage subscription, then Cancel. You keep access until the period ends.</td>
+            <td class="output">Open Billing, choose Manage subscription, then Cancel. You keep access until the period ends.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How do I cancel my subscription?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Open Billing, choose Manage subscription, then Cancel. You keep access until the period ends.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Open Billing, choose Manage subscription, then Cancel. You keep access until the period ends.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="5" data-case-id="support_hours" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.005008" data-outcome="tie" data-failure="false" data-tags="[&quot;support&quot;]" data-search="support_hours What are your support hours?">
+          <tr>
+            <td>support_hours</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.005008</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Support is available Monday to Friday, 09:00 to 18:00 UTC.</td>
+            <td class="output">Support is available Monday to Friday, 09:00 to 18:00 UTC.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">What are your support hours?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Support is available Monday to Friday, 09:00 to 18:00 UTC.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Support is available Monday to Friday, 09:00 to 18:00 UTC.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="6" data-case-id="payment_methods" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.004737" data-outcome="tie" data-failure="false" data-tags="[&quot;billing&quot;]" data-search="payment_methods Which payment methods do you accept?">
+          <tr>
+            <td>payment_methods</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.004737</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">We accept Visa, Mastercard, and PayPal.</td>
+            <td class="output">We accept Visa, Mastercard, and PayPal.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">Which payment methods do you accept?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>We accept Visa, Mastercard, and PayPal.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>We accept Visa, Mastercard, and PayPal.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="7" data-case-id="export_data" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.004978" data-outcome="tie" data-failure="false" data-tags="[&quot;privacy&quot;]" data-search="export_data How do I export my data?">
+          <tr>
+            <td>export_data</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.004978</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Go to Privacy, choose Download my data, and we email a zip file within 48 hours.</td>
+            <td class="output">Go to Privacy, choose Download my data, and we email a zip file within 48 hours.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How do I export my data?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Go to Privacy, choose Download my data, and we email a zip file within 48 hours.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Go to Privacy, choose Download my data, and we email a zip file within 48 hours.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="8" data-case-id="two_factor" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.004677" data-outcome="tie" data-failure="false" data-tags="[&quot;security&quot;]" data-search="two_factor How do I enable two-factor authentication?">
+          <tr>
+            <td>two_factor</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.004677</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Open Security, choose Two-factor authentication, and scan the QR code with your authenticator app.</td>
+            <td class="output">Open Security, choose Two-factor authentication, and scan the QR code with your authenticator app.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How do I enable two-factor authentication?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Open Security, choose Two-factor authentication, and scan the QR code with your authenticator app.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Open Security, choose Two-factor authentication, and scan the QR code with your authenticator app.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="9" data-case-id="latest_invoice" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.004186" data-outcome="tie" data-failure="false" data-tags="[&quot;billing&quot;, &quot;json&quot;]" data-search="latest_invoice Return my latest invoice as JSON with id and total.">
+          <tr>
+            <td>latest_invoice</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.004186</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">{&quot;id&quot;: &quot;INV-100&quot;, &quot;total&quot;: 42.5}</td>
+            <td class="output">{&quot;id&quot;: &quot;INV-100&quot;, &quot;total&quot;: 42.5}</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">Return my latest invoice as JSON with id and total.</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>{&quot;id&quot;: &quot;INV-100&quot;, &quot;total&quot;: 42.5}</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>{&quot;id&quot;: &quot;INV-100&quot;, &quot;total&quot;: 42.5}</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="10" data-case-id="express_shipping_cost" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.005959" data-outcome="tie" data-failure="false" data-tags="[&quot;shipping&quot;]" data-search="express_shipping_cost How much is express shipping?">
+          <tr>
+            <td>express_shipping_cost</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.005959</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Express shipping costs 15 dollars.</td>
+            <td class="output">Express shipping costs 15 dollars.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How much is express shipping?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Express shipping costs 15 dollars.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Express shipping costs 15 dollars.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="11" data-case-id="password_rules" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.004937" data-outcome="tie" data-failure="false" data-tags="[&quot;security&quot;]" data-search="password_rules What are the password requirements?">
+          <tr>
+            <td>password_rules</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.004937</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Use at least 12 characters with one number and one symbol.</td>
+            <td class="output">Use at least 12 characters with one number and one symbol.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">What are the password requirements?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Use at least 12 characters with one number and one symbol.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Use at least 12 characters with one number and one symbol.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="12" data-case-id="contact_email" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.006530" data-outcome="tie" data-failure="false" data-tags="[&quot;support&quot;]" data-search="contact_email How do I email support?">
+          <tr>
+            <td>contact_email</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.006530</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">Email support@example.com and include your account id.</td>
+            <td class="output">Email support@example.com and include your account id.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">How do I email support?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>Email support@example.com and include your account id.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>Email support@example.com and include your account id.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+        <tbody class="case" data-index="13" data-case-id="uptime_sla" data-baseline-score="1.000000" data-candidate-score="1.000000" data-delta="0.000000" data-drift="0.000000" data-latency="0.005418" data-outcome="tie" data-failure="false" data-tags="[&quot;reliability&quot;]" data-search="uptime_sla What is the uptime SLA?">
+          <tr>
+            <td>uptime_sla</td>
+            <td class="num">1.000000</td>
+            <td class="num">1.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.000000</td>
+            <td class="num">0.005418</td>
+            <td>true</td>
+            <td>true</td>
+            <td class="outcome-tie">tie</td>
+            <td class="output">The uptime SLA is 99.9 percent measured monthly.</td>
+            <td class="output">The uptime SLA is 99.9 percent measured monthly.</td>
+          </tr>
+          <tr class="case-detail">
+            <td colspan="11">
+              <details class="diff-row">
+                <summary>Outputs</summary>
+                <p class="diff-meta">delta 0.000000 · drift 0.000000</p>
+                <div>
+                  <div class="diff-label">Input</div>
+                  <pre class="case-input">What is the uptime SLA?</pre>
+                </div>
+                <div class="diff-columns">
+                  <div>
+                    <div class="diff-label">Baseline</div>
+                    <pre>The uptime SLA is 99.9 percent measured monthly.</pre>
+                  </div>
+                  <div>
+                    <div class="diff-label">Candidate</div>
+                    <pre>The uptime SLA is 99.9 percent measured monthly.</pre>
+                  </div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+  </main>
+  <script>
+
+(function () {
+  var section = document.getElementById("case-results");
+  if (!section) {
+    return;
+  }
+  var table = section.querySelector("table");
+  var search = document.getElementById("case-search");
+  var outcome = document.getElementById("case-outcome");
+  var tagSelect = document.getElementById("case-tag");
+  var shown = document.getElementById("case-shown");
+  if (!table || !search || !outcome || !tagSelect || !shown) {
+    return;
+  }
+  var groups = Array.prototype.slice.call(table.querySelectorAll("tbody.case"));
+  var buttons = table.querySelectorAll("thead button[data-sort]");
+  var sortKey = "";
+  var sortDir = 1;
+
+  function raw(group, key) {
+    return group.getAttribute("data-" + key) || "";
+  }
+
+  function asNumber(text) {
+    if (text === "") {
+      return null;
+    }
+    var value = Number(text);
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    return value;
+  }
+
+  function compare(left, right) {
+    var av = raw(left, sortKey);
+    var bv = raw(right, sortKey);
+    var primary = 0;
+    if (sortKey === "case-id") {
+      if (av < bv) {
+        primary = -1;
+      } else if (av > bv) {
+        primary = 1;
+      }
+    } else {
+      var an = asNumber(av);
+      var bn = asNumber(bv);
+      if (an === null || bn === null) {
+        if (an === null && bn === null) {
+          primary = 0;
+        } else {
+          return an === null ? 1 : -1;
+        }
+      } else if (an < bn) {
+        primary = -1;
+      } else if (an > bn) {
+        primary = 1;
+      }
+    }
+    if (primary === 0) {
+      return asNumber(raw(left, "index")) - asNumber(raw(right, "index"));
+    }
+    return primary * sortDir;
+  }
+
+  function tagList(group) {
+    try {
+      var parsed = JSON.parse(group.getAttribute("data-tags") || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  function apply() {
+    var query = search.value.trim().toLowerCase();
+    var want = outcome.value;
+    var wantTag = tagSelect.value;
+    var visible = 0;
+    for (var i = 0; i < groups.length; i++) {
+      var group = groups[i];
+      var hay = raw(group, "search").toLowerCase();
+      var ok = query === "" || hay.indexOf(query) !== -1;
+      if (want === "failure") {
+        ok = ok && raw(group, "failure") === "true";
+      } else if (want !== "all") {
+        ok = ok && raw(group, "outcome") === want;
+      }
+      if (wantTag !== "") {
+        ok = ok && tagList(group).indexOf(wantTag) !== -1;
+      }
+      group.classList.toggle("is-hidden", !ok);
+      if (ok) {
+        visible += 1;
+      }
+    }
+    if (sortKey !== "") {
+      groups.sort(compare);
+      for (var j = 0; j < groups.length; j++) {
+        table.appendChild(groups[j]);
+      }
+    }
+    shown.textContent = String(visible);
+  }
+
+  for (var b = 0; b < buttons.length; b++) {
+    buttons[b].addEventListener("click", function () {
+      var key = this.getAttribute("data-sort") || "";
+      if (sortKey === key) {
+        sortDir = -sortDir;
+      } else {
+        sortKey = key;
+        sortDir = 1;
+      }
+      var headers = table.querySelectorAll("thead th[aria-sort]");
+      for (var h = 0; h < headers.length; h++) {
+        headers[h].setAttribute("aria-sort", "none");
+      }
+      var th = this.closest("th");
+      if (th) {
+        th.setAttribute("aria-sort", sortDir > 0 ? "ascending" : "descending");
+      }
+      apply();
+    });
+  }
+  search.addEventListener("input", apply);
+  outcome.addEventListener("change", apply);
+  tagSelect.addEventListener("change", apply);
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+repos:
+  # Local hooks use the dev venv tools (/tmp/pr-venv), not copies pre-commit installs.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: /tmp/pr-venv/bin/ruff
+        language: system
+        args: ["check"]
+        pass_filenames: false
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: /tmp/pr-venv/bin/ruff
+        language: system
+        args: ["format", "--check"]
+        pass_filenames: false
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: /tmp/pr-venv/bin/mypy
+        language: system
+        args: ["src/promptregress"]
+        pass_filenames: false
+        types: [python]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.4.1
+    hooks:
+      - id: mypy
+        # Same command as CI: `mypy src/promptregress` from pyproject.toml.
+        args: ["src/promptregress"]
+        pass_filenames: false

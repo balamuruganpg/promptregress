@@ -1,0 +1,44 @@
+# PromptRegress self-test.
+#
+# The bundled demo gate FAILS by design: the candidate template drops required
+# details on three cases. This workflow runs the composite action and asserts
+# that promptregress compare exited 1, so the job stays green while proving
+# the gate rejects that regression.
+name: PromptRegress self-test
+
+on:
+  push:
+
+jobs:
+  demo-gate:
+    name: Bundled demo gate fails (expected exit 1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PromptRegress gate (this step fails by design)
+        id: gate
+        uses: ./
+        continue-on-error: true
+        with:
+          suite: examples/support_qa.json
+          baseline-config: examples/ci/baseline.yaml
+          candidate-config: examples/ci/candidate.yaml
+          max-regression: "0"
+          python-version: "3.12"
+          report-json: promptregress-report.json
+          report-md: promptregress-report.md
+          report-html: promptregress-report.html
+
+      - name: Assert exit code 1 (demo regression is intentional; CI stays green)
+        if: always()
+        shell: bash
+        run: |
+          code="${{ steps.gate.outputs.exit-code }}"
+          if [ -z "$code" ] && [ -n "${RUNNER_TEMP:-}" ] && [ -f "$RUNNER_TEMP/promptregress-gate-exit" ]; then
+            code="$(tr -d '[:space:]' < "$RUNNER_TEMP/promptregress-gate-exit")"
+          fi
+          echo "promptregress compare exit code: ${code:-<empty>}"
+          echo "Exit code 1 is required. The bundled demo drops three answers on purpose."
+          test "$code" = "1"

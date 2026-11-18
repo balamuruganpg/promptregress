@@ -1,0 +1,286 @@
+{
+  "name": "summarization",
+  "description": "Source passages scored with TF-IDF cosine against a reference summary and contains checks for two key points.",
+  "cases": [
+    {
+      "id": "outage",
+      "input": "id: outage\nSummarize the passage.\n\nOn Monday the checkout API stopped accepting payments at 10:15 UTC. Engineers rolled back the rate-limiter change and restored service after 42 minutes. Orders placed during the outage were replayed from the queue and no charges were duplicated.",
+      "reference": "Checkout was down for 42 minutes. The failure was in the checkout API.",
+      "tags": [
+        "reliability",
+        "product"
+      ],
+      "metadata": {
+        "key_points": [
+          "42 minutes",
+          "checkout API"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "42 minutes"
+        },
+        {
+          "kind": "contains",
+          "value": "checkout API"
+        }
+      ]
+    },
+    {
+      "id": "hiring",
+      "input": "id: hiring\nSummarize the passage.\n\nThe platform group is hiring three engineers, all based in Oslo. Interviews start in May. The roles cover billing, search, and the on-call rotation. Contractors are not eligible.",
+      "reference": "The platform group is hiring three engineers. The roles are based in Oslo.",
+      "tags": [
+        "company",
+        "people"
+      ],
+      "metadata": {
+        "key_points": [
+          "three engineers",
+          "Oslo"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "three engineers"
+        },
+        {
+          "kind": "contains",
+          "value": "Oslo"
+        }
+      ]
+    },
+    {
+      "id": "budget",
+      "input": "id: budget\nSummarize the passage.\n\nFinance cut the travel budget by 12 percent for the second half of the year. A travel freeze covers conferences that are not customer meetings. Team offsites already booked are still funded.",
+      "reference": "Travel spend is cut by 12 percent. A travel freeze covers non-customer conferences.",
+      "tags": [
+        "finance",
+        "policy"
+      ],
+      "metadata": {
+        "key_points": [
+          "12 percent",
+          "travel freeze"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "12 percent"
+        },
+        {
+          "kind": "contains",
+          "value": "travel freeze"
+        }
+      ]
+    },
+    {
+      "id": "launch",
+      "input": "id: launch\nSummarize the passage.\n\nDark mode ships on Tuesday for every workspace on the Pro plan. The toggle lives in account settings. Free workspaces keep the light theme until the following release.",
+      "reference": "Dark mode ships on Tuesday. It is available to Pro workspaces.",
+      "tags": [
+        "product",
+        "release"
+      ],
+      "metadata": {
+        "key_points": [
+          "Tuesday",
+          "dark mode"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "Tuesday"
+        },
+        {
+          "kind": "contains",
+          "value": "dark mode"
+        }
+      ]
+    },
+    {
+      "id": "security_patch",
+      "input": "id: security_patch\nSummarize the passage.\n\nBuild 4.8.2 patches CVE-2026-1180 in the session signer. Administrators must complete token rotation within 24 hours of upgrading. Old refresh tokens stop working after that window.",
+      "reference": "Build 4.8.2 patches CVE-2026-1180. Administrators must finish token rotation.",
+      "tags": [
+        "security",
+        "release"
+      ],
+      "metadata": {
+        "key_points": [
+          "CVE-2026-1180",
+          "token rotation"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "CVE-2026-1180"
+        },
+        {
+          "kind": "contains",
+          "value": "token rotation"
+        }
+      ]
+    },
+    {
+      "id": "warehouse",
+      "input": "id: warehouse\nSummarize the passage.\n\nThe Reno warehouse now covers the western states. Standard parcels from Reno arrive in two days. The older Phoenix site still handles returns.",
+      "reference": "The Reno warehouse serves the western states. Standard parcels arrive in two days.",
+      "tags": [
+        "shipping",
+        "operations"
+      ],
+      "metadata": {
+        "key_points": [
+          "Reno",
+          "two days"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "Reno"
+        },
+        {
+          "kind": "contains",
+          "value": "two days"
+        }
+      ]
+    },
+    {
+      "id": "training",
+      "input": "id: training\nSummarize the passage.\n\nEvery employee completes the phishing refresher by 30 June. The module takes twenty minutes and includes a simulated invoice lure. Managers see who has not finished.",
+      "reference": "Staff complete the phishing refresher by 30 June. The module includes a simulated lure.",
+      "tags": [
+        "security",
+        "people"
+      ],
+      "metadata": {
+        "key_points": [
+          "phishing",
+          "30 June"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "phishing"
+        },
+        {
+          "kind": "contains",
+          "value": "30 June"
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "input": "id: pricing\nSummarize the passage.\n\nThe annual plan is 18 percent cheaper than paying month to month. The discount appears on the first invoice. Downgrades take effect at the next renewal.",
+      "reference": "The annual plan costs 18 percent less than monthly billing. The discount is on the first invoice.",
+      "tags": [
+        "billing",
+        "product"
+      ],
+      "metadata": {
+        "key_points": [
+          "annual plan",
+          "18 percent"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "annual plan"
+        },
+        {
+          "kind": "contains",
+          "value": "18 percent"
+        }
+      ]
+    },
+    {
+      "id": "migration",
+      "input": "id: migration\nSummarize the passage.\n\nThe primary database moves to Postgres 16 on Saturday. A read-only window lasts about twenty minutes while replicas catch up. Writes submitted during that window are rejected with a retry hint.",
+      "reference": "The database moves to Postgres 16. A read-only window lasts about twenty minutes.",
+      "tags": [
+        "reliability",
+        "operations"
+      ],
+      "metadata": {
+        "key_points": [
+          "Postgres 16",
+          "read-only window"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "Postgres 16"
+        },
+        {
+          "kind": "contains",
+          "value": "read-only window"
+        }
+      ]
+    },
+    {
+      "id": "support_queue",
+      "input": "id: support_queue\nSummarize the passage.\n\nPriority tickets are now answered in under four hours during the weekday. They sit in a priority queue ahead of general questions. The target does not apply on regional holidays.",
+      "reference": "Priority tickets are answered in under four hours. They use a priority queue.",
+      "tags": [
+        "support",
+        "policy"
+      ],
+      "metadata": {
+        "key_points": [
+          "under four hours",
+          "priority queue"
+        ]
+      },
+      "assertions": [
+        {
+          "kind": "tfidf_cosine"
+        },
+        {
+          "kind": "contains",
+          "value": "under four hours"
+        },
+        {
+          "kind": "contains",
+          "value": "priority queue"
+        }
+      ]
+    }
+  ]
+}

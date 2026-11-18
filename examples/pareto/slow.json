@@ -1,0 +1,73 @@
+{
+  "suite_name": "pareto-demo",
+  "config_name": "slow",
+  "mean_score": 0.0,
+  "pass_rate": 0.0,
+  "total_latency_ms": 160.0,
+  "mean_latency_ms": 80.0,
+  "p95_latency_ms": 80.0,
+  "total_prompt_tokens": 0,
+  "total_completion_tokens": 0,
+  "total_tokens": 0,
+  "n_cached": 0,
+  "stability": {
+    "mean_within_case_sd": 0.0,
+    "least_stable": [
+      {
+        "case_id": "c0",
+        "score_sd": 0.0
+      },
+      {
+        "case_id": "c1",
+        "score_sd": 0.0
+      }
+    ]
+  },
+  "results": [
+    {
+      "case_id": "c0",
+      "output": "out",
+      "scores": {
+        "exact_match": 0.0
+      },
+      "score": 0.0,
+      "passed": false,
+      "latency_ms": 80.0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0,
+      "cached": false,
+      "error": null,
+      "tags": [],
+      "sample_scores": [],
+      "sample_outputs": [],
+      "score_sd": 0.0,
+      "n_samples": 1
+    },
+    {
+      "case_id": "c1",
+      "output": "out",
+      "scores": {
+        "exact_match": 0.0
+      },
+      "score": 0.0,
+      "passed": false,
+      "latency_ms": 80.0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_tokens": 0,
+      "cached": false,
+      "error": null,
+      "tags": [],
+      "sample_scores": [],
+      "sample_outputs": [],
+      "score_sd": 0.0,
+      "n_samples": 1
+    }
+  ],
+  "cost": {
+    "model": "mid",
+    "usd": 0.04,
+    "note": null
+  }
+}

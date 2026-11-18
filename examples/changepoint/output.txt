@@ -1,0 +1,32 @@
+changepoint
+n=16
+change_index=8
+before_n=8
+after_n=8
+skipped=0
+before_mean=1.000000
+after_mean=0.785714
+mean_shift=-0.214286
+statistic=0.428571
+p_value=0.000500
+permutations=2000
+seed=13
+note=The series is metrics.mean_score in history-file order. change_index is the 0-based index of the first run after the split. It maximises C_k = sqrt(k*(n-k)/n) * abs(before_mean - after_mean) for k from 1 to n-1. Each segment mean is math.fsum of that segment divided by its length. The smallest k wins a tie. mean_shift is after_mean minus before_mean. The p-value is (1 + the number of permutations whose maximum C is at least the observed statistic) / (permutations + 1). Each permutation shuffles this series with random.Random(seed). That generator is local to the call. Text rounds to 6 decimals. JSON keeps the stored floats. It reports a detected shift in the recorded means. It is not proof of cause, and it does not change the gate.
+before:
+[0] record=0 timestamp=2026-11-12T00:00:00Z command=run suite=support_qa config_name=full provider=mock model=demo
+[1] record=1 timestamp=2026-11-12T00:00:01Z command=run suite=support_qa config_name=full provider=mock model=demo
+[2] record=2 timestamp=2026-11-12T00:00:02Z command=run suite=support_qa config_name=full provider=mock model=demo
+[3] record=3 timestamp=2026-11-12T00:00:03Z command=run suite=support_qa config_name=full provider=mock model=demo
+[4] record=4 timestamp=2026-11-12T00:00:04Z command=run suite=support_qa config_name=full provider=mock model=demo
+[5] record=5 timestamp=2026-11-12T00:00:05Z command=run suite=support_qa config_name=full provider=mock model=demo
+[6] record=6 timestamp=2026-11-12T00:00:06Z command=run suite=support_qa config_name=full provider=mock model=demo
+[7] record=7 timestamp=2026-11-12T00:00:07Z command=run suite=support_qa config_name=full provider=mock model=demo
+after:
+[8] record=8 timestamp=2026-11-12T00:00:08Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[9] record=9 timestamp=2026-11-12T00:00:09Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[10] record=10 timestamp=2026-11-12T00:00:10Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[11] record=11 timestamp=2026-11-12T00:00:11Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[12] record=12 timestamp=2026-11-12T00:00:12Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[13] record=13 timestamp=2026-11-12T00:00:13Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[14] record=14 timestamp=2026-11-12T00:00:14Z command=run suite=support_qa config_name=brief provider=mock model=demo
+[15] record=15 timestamp=2026-11-12T00:00:15Z command=run suite=support_qa config_name=brief provider=mock model=demo
