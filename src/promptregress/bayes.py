@@ -291,11 +291,11 @@ def format_bayes(result: BayesResult) -> str:
             f"n10={result.n10}",
             f"n01={result.n01}",
             f"n00={result.n00}",
-            f"observed_diff={result.observed_diff:.6f}",
-            f"posterior_mean={result.posterior_mean:.6f}",
+            f"observed_diff={_format_difference(result.observed_diff)}",
+            f"posterior_mean={_format_difference(result.posterior_mean)}",
             f"ci_level={result.ci_level:.6f}",
-            f"ci_low={result.ci_low:.6f}",
-            f"ci_high={result.ci_high:.6f}",
+            f"ci_low={_format_difference(result.ci_low)}",
+            f"ci_high={_format_difference(result.ci_high)}",
             f"p_worse={result.p_worse:.6f}",
             f"delta={result.delta:.6f}",
             f"p_worse_than_delta={result.p_worse_than_delta:.6f}",
@@ -304,6 +304,11 @@ def format_bayes(result: BayesResult) -> str:
         ]
     )
     return strip_unpaired_surrogates("\n".join(lines) + "\n")
+
+
+def _format_difference(value: float) -> str:
+    formatted = f"{value:.6f}"
+    return "0.000000" if formatted == "-0.000000" else formatted
 
 
 def bayes_to_dict(result: BayesResult) -> dict[str, object]:
@@ -659,7 +664,7 @@ def _validate_delta(delta: float) -> float:
     number = _as_float(delta, message)
     if not math.isfinite(number) or number < 0.0 or number >= 1.0:
         raise ValueError(message)
-    return number
+    return 0.0 if number == 0.0 else number
 
 
 def _validate_seed(seed: int) -> int:

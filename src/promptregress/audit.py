@@ -52,9 +52,9 @@ process exits 1 when any finding is an error. Warnings alone exit 0.
 
 import json
 import math
-import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from fractions import Fraction
 from pathlib import Path
 from typing import Literal
 
@@ -73,7 +73,7 @@ REFERENCE_KINDS: frozenset[str] = frozenset(
     {"exact_match", "contains", "levenshtein", "tfidf_cosine"}
 )
 
-_DUPLICATE = re.compile(r"^Duplicate case id: (?P<case_id>.*)$")
+_DUPLICATE_PREFIX = "Duplicate case id: "
 
 
 @dataclass(frozen=True)
@@ -175,9 +175,8 @@ def _audit_path(path: str) -> list[Finding]:
 
 def _load_finding(path: str, exc: SuiteError) -> Finding:
     text = str(exc)
-    match = _DUPLICATE.match(text)
-    if match is not None:
-        case_id = match.group("case_id")
+    if text.startswith(_DUPLICATE_PREFIX):
+        case_id = text.removeprefix(_DUPLICATE_PREFIX)
         return Finding(
             file=path,
             case=case_id,
@@ -828,13 +827,10 @@ def _size_message(n_configs: int, n_cases: int, n_ignored: int) -> str:
 
 
 def _config_total(run: RunResult) -> float:
-    """Sum of case scores. The contract names ``math.fsum``.
+    """Sum of case scores using ``math.fsum`` with an exact fallback.
 
-    ``fsum`` raises ``OverflowError`` when a partial sum leaves the float
-    range, including a series whose exact sum is finite
-    (``1e308 + 1e308 + -1e308`` is ``1e308``). Equal scores use a product.
-    Any other series scales by the largest magnitude and sums the unit
-    terms. A sum that is not a finite float raises ``ValueError``.
+    A partial sum can overflow even when the final sum fits. A total
+    outside the finite float range raises ``ValueError``.
     """
     scores = [result.score for result in run.results]
     try:
@@ -847,26 +843,14 @@ def _config_total(run: RunResult) -> float:
 
 
 def _wide_sum(values: Sequence[float]) -> float:
-    """Sum when ``math.fsum`` raised ``OverflowError``. Non-finite returns inf."""
-    if not values:
-        return 0.0
-    first = values[0]
-    if all(value == first for value in values):
-        try:
-            return float(first) * len(values)
-        except OverflowError:
-            return math.inf
+    """Accumulate exact binary fractions and round only the final total."""
+    # Large terms can cancel completely. Exact accumulation keeps even a
+    # residual that would underflow if scaled by the largest term.
+    total = sum(Fraction(float(value)) for value in values)
     try:
-        peak = max(abs(float(value)) for value in values)
+        return float(total)
     except OverflowError:
-        return math.inf
-    if peak == 0.0 or not math.isfinite(peak):
-        return math.inf
-    try:
-        scaled = math.fsum(float(value) / peak for value in values)
-        return scaled * peak
-    except OverflowError:
-        return math.inf
+        return math.inf if total > 0 else -math.inf
 
 
 def _pearson(left: Sequence[float], right: Sequence[float]) -> float | None:

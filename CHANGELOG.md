@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.15.3 — 2026-11-18
+
+### Fixed
+
+- Suite audit preserves tiny score residuals after extreme values cancel. When `math.fsum` overflows, it accumulates the scores exactly and rounds the final total once.
+- Saved comparisons with finite scores load even when a paired difference overflows. Comparison statistics use a common binary scale, and the loaded runs retain their original scores and pass bits for `bayes`, `audit`, `select`, and `risk`.
+- `bayes --delta -0.0` emits positive zero in JSON and text. Text also prints unsigned zero when a negative statistic rounds to zero at six decimal places.
+- Suite lint reports a duplicate case ID containing a newline under `duplicate_case_id` with the full ID.
+- The `prioritize` API raises a case-specific `ValueError` when an integer score exceeds the finite float range.
+
 ## 0.15.2 — 2026-11-18
 
 ### Fixed

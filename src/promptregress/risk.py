@@ -399,6 +399,10 @@ def load_comparison(path: str | Path) -> Comparison:
     A history JSONL file is rejected: those rows are headline metrics, not
     per-case pairs. Invalid UTF-8, invalid JSON, and a report that is not a
     comparison raise ``ValueError``.
+
+    The runs keep their original scores and pass bits. ``compare_runs``
+    rescales differences for the statistical calculations when finite scores
+    produce an oversized difference.
     """
     target = Path(path)
     payload = _read_json_object(target)

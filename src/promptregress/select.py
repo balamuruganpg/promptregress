@@ -418,11 +418,15 @@ def _observation(index: int, row: PairedRow) -> _Observation:
 
 
 def _finite(value: object, label: str) -> float:
+    message = f"{label} must be a finite number"
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{label} must be a finite number")
-    number = float(value)
+        raise ValueError(message)
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError(message) from exc
     if not math.isfinite(number):
-        raise ValueError(f"{label} must be a finite number")
+        raise ValueError(message)
     return number
 
 

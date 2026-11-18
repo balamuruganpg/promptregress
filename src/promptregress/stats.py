@@ -4,6 +4,7 @@ import math
 import random
 from collections import Counter, defaultdict
 from collections.abc import Sequence
+from statistics import variance as sample_variance
 
 from promptregress.calibration import judge_agreement_for_run
 from promptregress.models import (
@@ -17,6 +18,7 @@ from promptregress.models import (
 )
 
 _TIE_EPS = 1e-12
+_DIFF_SCALE_EXPONENT = 256
 _WILCOXON_EXACT_MAX_N = 20
 _CI_METHODS = {"percentile", "bca"}
 _EFFECT_SMALL = 0.2
@@ -67,7 +69,10 @@ def wilcoxon_signed_rank(diffs: Sequence[float]) -> tuple[float, float]:
     ``sum(t^3 - t) / 48``. All-zero input returns ``(0.0, 1.0)``.
     """
     values = _finite_values(diffs, "diffs")
-    nonzero = [item for item in values if abs(item) > _TIE_EPS]
+    return _wilcoxon_nonzero([item for item in values if abs(item) > _TIE_EPS])
+
+
+def _wilcoxon_nonzero(nonzero: list[float]) -> tuple[float, float]:
     n = len(nonzero)
     if n == 0:
         return (0.0, 1.0)
@@ -90,15 +95,18 @@ def paired_ttest(diffs: Sequence[float]) -> tuple[float, float, float]:
     constant diffs return an infinite ``t`` and ``p = 0``.
     """
     values = _finite_values(diffs, "diffs")
-    n = len(values)
+    mean, variance = _paired_moments(values)
+    return _ttest_from_moments(len(values), mean, variance, _TIE_EPS)
+
+
+def _ttest_from_moments(
+    n: int, mean: float, variance: float, tie_eps: float
+) -> tuple[float, float, float]:
     if n < 2:
         return (0.0, 0.0, 1.0)
     df = float(n - 1)
-    mean = sum(values) / n
-    sum_sq = sum((item - mean) ** 2 for item in values)
-    variance = sum_sq / df
     if variance <= 0.0:
-        if abs(mean) <= _TIE_EPS:
+        if abs(mean) <= tie_eps:
             return (0.0, df, 1.0)
         t_stat = math.copysign(math.inf, mean)
         return (t_stat, df, 0.0)
@@ -114,15 +122,24 @@ def cohens_dz(diffs: Sequence[float]) -> float:
     ``n < 2`` returns ``0.0``. Zero variance with a zero mean returns ``0.0``;
     a non-zero constant mean returns signed infinity.
     """
-    values = _finite_values(diffs, "diffs")
+    mean, variance = _paired_moments(_finite_values(diffs, "diffs"))
+    return _dz_from_moments(mean, variance, _TIE_EPS)
+
+
+def _paired_moments(values: list[float], *, scaled: bool = False) -> tuple[float, float]:
     n = len(values)
     if n < 2:
-        return 0.0
+        return (0.0, 0.0)
+    if scaled:
+        return (math.fsum(values) / n, sample_variance(values))
     mean = sum(values) / n
     sum_sq = sum((item - mean) ** 2 for item in values)
-    variance = sum_sq / (n - 1)
+    return (mean, sum_sq / (n - 1))
+
+
+def _dz_from_moments(mean: float, variance: float, tie_eps: float) -> float:
     if variance <= 0.0:
-        if abs(mean) <= _TIE_EPS:
+        if abs(mean) <= tie_eps:
             return 0.0
         return math.copysign(math.inf, mean)
     return mean / math.sqrt(variance)
@@ -209,6 +226,11 @@ def compare_runs(
     ``judge_agreement`` (baseline first, then candidate). The case score is
     already the mean of the judges. The agreement summary does not change
     the diffs or the gate.
+
+    For very large finite scores, the statistics use differences in common
+    scaled units. Mean and interval endpoints are converted back to score
+    units. An out-of-range result in score units, including a row's raw
+    difference, is represented by signed infinity.
     """
     if ci_method not in _CI_METHODS:
         raise ValueError("ci_method must be 'percentile' or 'bca'")
@@ -250,20 +272,20 @@ def compare_runs(
                 tags=tags,
             )
         )
-    diffs = [row.diff for row in rows]
-    if rows:
-        mean_diff = sum(diffs) / len(rows)
-    else:
-        mean_diff = 0.0
-    ci_low, ci_high, details = _mean_confidence_interval(
-        diffs, n_boot=n_boot, seed=seed, alpha=alpha, method=ci_method
+    diffs, scale = _comparison_diffs(rows)
+    mean_diff, ci_low, ci_high, details = _score_summary(
+        diffs, scale, n_boot=n_boot, seed=seed, alpha=alpha, method=ci_method
     )
     discordant_b = sum(1 for row in rows if row.baseline_passed and not row.candidate_passed)
     discordant_c = sum(1 for row in rows if row.candidate_passed and not row.baseline_passed)
     wins, losses, ties = _outcome_counts(rows)
-    wilcoxon_stat, wilcoxon_p = wilcoxon_signed_rank(diffs)
-    ttest_stat, ttest_df, ttest_p = paired_ttest(diffs)
-    dz = cohens_dz(diffs)
+    test_diffs = _finite_values(diffs, "diffs")
+    # Pairing already applied the tie band in the original score units.
+    wilcoxon_stat, wilcoxon_p = _wilcoxon_nonzero([diff for diff in test_diffs if diff != 0.0])
+    mean, variance = _paired_moments(test_diffs, scaled=scale != 1.0)
+    tie_eps = _TIE_EPS * scale
+    ttest_stat, ttest_df, ttest_p = _ttest_from_moments(len(diffs), mean, variance, tie_eps)
+    dz = _dz_from_moments(mean, variance, tie_eps)
     slices = _slice_summaries(rows, n_boot=n_boot, seed=seed, alpha=alpha, method=ci_method)
     return Comparison(
         baseline=baseline,
@@ -293,6 +315,38 @@ def compare_runs(
     )
 
 
+def _comparison_diffs(rows: Sequence[PairedRow]) -> tuple[list[float], float]:
+    diffs = [row.diff for row in rows]
+    peak = max(map(abs, diffs), default=0.0)
+    if peak <= 2.0**_DIFF_SCALE_EXPONENT:
+        return diffs, 1.0
+
+    # Two finite binary64 scores can differ by up to twice the largest float.
+    # Scaling by a power of two leaves room for sums, squares, and cubes
+    # while keeping every difference above the tie threshold in range.
+    exponent = 1025 if math.isinf(peak) else math.frexp(peak)[1]
+    scale = math.ldexp(1.0, _DIFF_SCALE_EXPONENT - exponent)
+    return [
+        row.candidate_score * scale - row.baseline_score * scale
+        if math.isinf(row.diff)
+        else row.diff * scale
+        for row in rows
+    ], scale
+
+
+def _score_summary(
+    diffs: list[float], scale: float, n_boot: int, seed: int, alpha: float, method: str
+) -> tuple[float, float, float, list[str]]:
+    low, high, notes = _mean_confidence_interval(
+        diffs, n_boot=n_boot, seed=seed, alpha=alpha, method=method, scale=scale
+    )
+    if not diffs:
+        return 0.0, low, high, notes
+    total = sum(diffs) if scale == 1.0 else math.fsum(diffs)
+    mean = total / len(diffs)
+    return mean / scale, low / scale, high / scale, notes
+
+
 def _judge_agreements(baseline: RunResult, candidate: RunResult) -> tuple[JudgeAgreement, ...]:
     found: list[JudgeAgreement] = []
     for side, run in (("baseline", baseline), ("candidate", candidate)):
@@ -308,6 +362,8 @@ def _mean_confidence_interval(
     seed: int,
     alpha: float,
     method: str,
+    *,
+    scale: float = 1.0,
 ) -> tuple[float, float, list[str]]:
     if isinstance(n_boot, bool) or not isinstance(n_boot, int) or n_boot < 1:
         raise ValueError("n_boot must be an integer >= 1")
@@ -321,22 +377,32 @@ def _mean_confidence_interval(
     values = _finite_values(diffs, "diffs")
     if not values:
         return (0.0, 0.0, [])
-    means = _bootstrap_means(values, n_boot=n_boot, seed=seed)
+    scaled = scale != 1.0
+    means = _bootstrap_means(values, n_boot=n_boot, seed=seed, accurate_sum=scaled)
     means.sort()
     low_pct = 100.0 * (alpha_value / 2.0)
     high_pct = 100.0 * (1.0 - alpha_value / 2.0)
     percentile = (_percentile(means, low_pct), _percentile(means, high_pct))
     if method == "percentile":
         return (percentile[0], percentile[1], [])
-    bca = _bca_interval(values, means, alpha_value)
+    tie_eps = _TIE_EPS * scale
+    hat = (math.fsum(values) if scaled else sum(values)) / len(values)
+    bca = _bca_interval(values, means, alpha_value, hat, tie_eps)
     if bca is None:
-        return (percentile[0], percentile[1], [_bca_fallback_note(values, means)])
+        return (percentile[0], percentile[1], [_bca_fallback_note(values, means, hat, tie_eps)])
     return (bca[0], bca[1], [])
 
 
-def _bootstrap_means(values: list[float], n_boot: int, seed: int) -> list[float]:
+def _bootstrap_means(
+    values: list[float], n_boot: int, seed: int, *, accurate_sum: bool
+) -> list[float]:
     rng = random.Random(seed)
     width = len(values)
+    if accurate_sum:
+        return [
+            math.fsum(values[rng.randrange(width)] for _ in range(width)) / width
+            for _ in range(n_boot)
+        ]
     means = [0.0] * n_boot
     for boot_index in range(n_boot):
         total = 0.0
@@ -366,17 +432,18 @@ def _bca_interval(
     values: list[float],
     sorted_means: list[float],
     alpha: float,
+    hat: float,
+    tie_eps: float,
 ) -> tuple[float, float] | None:
     n = len(values)
     if n < 3:
         return None
-    if max(values) - min(values) <= _TIE_EPS:
+    if max(values) - min(values) <= tie_eps:
         return None
     acceleration = _jackknife_acceleration(values)
     if acceleration is None:
         return None
-    hat = sum(values) / n
-    proportion = _bias_correction_proportion(sorted_means, hat)
+    proportion = _bias_correction_proportion(sorted_means, hat, tie_eps)
     if proportion <= 0.0 or proportion >= 1.0:
         return None
     z0 = _norm_ppf(proportion)
@@ -423,22 +490,23 @@ def _bca_adjusted_alpha(z0: float, acceleration: float, z_crit: float) -> float 
     return adjusted
 
 
-def _bca_fallback_note(values: list[float], sorted_means: list[float]) -> str:
+def _bca_fallback_note(
+    values: list[float], sorted_means: list[float], hat: float, tie_eps: float
+) -> str:
     n = len(values)
     if n < 3:
         return "BCa fell back to percentile: n<3."
-    if max(values) - min(values) <= _TIE_EPS:
+    if max(values) - min(values) <= tie_eps:
         return "BCa fell back to percentile: constant diffs."
     if _jackknife_acceleration(values) is None:
         return "BCa fell back to percentile: degenerate jackknife."
-    hat = sum(values) / n
-    proportion = _bias_correction_proportion(sorted_means, hat)
+    proportion = _bias_correction_proportion(sorted_means, hat, tie_eps)
     if proportion <= 0.0 or proportion >= 1.0:
         return "BCa fell back to percentile: degenerate bias correction."
     return "BCa fell back to percentile: degenerate acceleration mapping."
 
 
-def _bias_correction_proportion(sorted_means: list[float], hat: float) -> float:
+def _bias_correction_proportion(sorted_means: list[float], hat: float, tie_eps: float) -> float:
     """Share of bootstrap means below ``hat``, with a half-count on ties.
 
     A raw ``#{θ* < θ̂} / B`` is pulled away from 1/2 when many replicates land
@@ -449,9 +517,9 @@ def _bias_correction_proportion(sorted_means: list[float], hat: float) -> float:
     n_equal = 0
     for mean in sorted_means:
         delta = mean - hat
-        if delta < -_TIE_EPS:
+        if delta < -tie_eps:
             n_less += 1
-        elif abs(delta) <= _TIE_EPS:
+        elif abs(delta) <= tie_eps:
             n_equal += 1
     return (n_less + 0.5 * n_equal) / len(sorted_means)
 
@@ -647,10 +715,9 @@ def _slice_summaries(
     slices: list[SliceSummary] = []
     for tag in sorted(grouped):
         group = grouped[tag]
-        diffs = [row.diff for row in group]
-        mean_diff = sum(diffs) / len(group)
-        ci_low, ci_high, _notes = _mean_confidence_interval(
-            diffs, n_boot=n_boot, seed=seed, alpha=alpha, method=method
+        diffs, scale = _comparison_diffs(group)
+        mean_diff, ci_low, ci_high, _notes = _score_summary(
+            diffs, scale, n_boot=n_boot, seed=seed, alpha=alpha, method=method
         )
         wins, losses, ties = _outcome_counts(group)
         slices.append(

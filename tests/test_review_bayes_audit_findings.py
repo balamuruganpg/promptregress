@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -14,10 +15,14 @@ import pytest
 from promptregress.audit import audit_runs, suite_audit_to_dict
 from promptregress.bayes import (
     bayesian_comparison,
+    format_bayes,
     regularized_incomplete_beta,
 )
 from promptregress.cli import main
-from promptregress.models import CaseResult, Comparison, RunResult
+from promptregress.models import Case, CaseResult, Comparison, RunResult, Suite
+from promptregress.risk import load_comparison
+from promptregress.select import prioritize
+from promptregress.stats import compare_runs, paired_bootstrap_ci, paired_ttest
 
 HUGE_INT = 10**400
 BIG = 1e200
@@ -70,7 +75,12 @@ def _write_comparison(path: Path, baseline: RunResult, candidate: RunResult) -> 
             "config_name": run.config_name,
             "suite_name": run.suite_name,
             "results": [
-                {"case_id": item.case_id, "score": item.score, "passed": item.passed}
+                {
+                    "case_id": item.case_id,
+                    "score": item.score,
+                    "passed": item.passed,
+                    "tags": item.tags,
+                }
                 for item in run.results
             ],
         }
@@ -343,3 +353,168 @@ def test_huge_integer_score_and_delta_raise_valueerror(
     err = capsys.readouterr().err
     assert err.startswith("error:")
     assert "finite" in err
+
+
+@pytest.mark.parametrize("residual", [1e-18, -1e-18])
+def test_audit_retains_tiny_residual_after_overflowing_partial_sum(residual: float) -> None:
+    scores = {
+        case_id: [score, score, 0.0, 0.0]
+        for case_id, score in zip("abcd", [EDGE, EDGE, -EDGE, -EDGE], strict=True)
+    }
+    scores["residue"] = [residual, residual, 0.0, 0.0]
+    passes = {case_id: [1, 1, 1, 1] for case_id in "abcd"}
+    passes["residue"] = [0, 0, 1, 1] if residual > 0 else [1, 1, 0, 0]
+
+    report = audit_runs(_matrix(scores, passes))
+
+    assert {fit.config: fit.total_score for fit in report.config_fits} == {
+        "c0": residual,
+        "c1": residual,
+        "c2": 0.0,
+        "c3": 0.0,
+    }
+    misfit = next(case for case in report.cases if case.case_id == "residue")
+    assert misfit.point_biserial == pytest.approx(-1.0)
+    assert "misfit" in misfit.flags
+
+
+def test_bayes_loads_finite_scores_with_overflowing_differences(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "comparison.json"
+    baseline = _run("baseline", [(case_id, EDGE, True) for case_id in "abcde"])
+    candidate = _run("candidate", [(case_id, -EDGE, False) for case_id in "abcde"])
+    _write_comparison(path, baseline, candidate)
+
+    assert main(["bayes", str(path), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["n"] == report["n10"] == 5
+    assert report["posterior_mean"] == pytest.approx(-5 / 9)
+    assert report["p_worse"] == pytest.approx(63 / 64)
+
+
+def test_loaded_comparison_keeps_extreme_diff_order_and_finite_statistics(tmp_path: Path) -> None:
+    path = tmp_path / "comparison.json"
+    baseline = _run(
+        "baseline", [("a", -EDGE, False), ("b", 9e307, True), ("c", 0.0, False), ("d", 0.0, False)]
+    )
+    baseline.results[0] = replace(baseline.results[0], tags=["extreme"])
+    candidate = _run(
+        "candidate",
+        [("a", EDGE, True), ("b", -EDGE, False), ("c", 1e-10, True), ("d", 1e-13, False)],
+    )
+    _write_comparison(path, baseline, candidate)
+
+    comparison = load_comparison(path)
+
+    assert [row.outcome for row in comparison.per_case] == ["win", "loss", "win", "tie"]
+    assert comparison.per_case[0].diff == math.inf
+    assert comparison.per_case[1].diff == -math.inf
+    assert comparison.per_case[2].diff == 1e-10
+    assert comparison.per_case[0].baseline_score == -EDGE
+    assert comparison.per_case[0].candidate_score == EDGE
+    assert comparison.wilcoxon_stat == 4.0  # Positive ranks 3 and 1.
+    reference = [2.0, -1.9, 0.0, 0.0]  # Original diffs in units of 1e308 for moments.
+    assert comparison.mean_diff == pytest.approx(2.5e306)
+    assert (comparison.ci_low, comparison.ci_high) == pytest.approx(
+        tuple(bound * EDGE for bound in paired_bootstrap_ci(reference))
+    )
+    assert comparison.ttest_stat == pytest.approx(paired_ttest(reference)[0])
+    (extreme_slice,) = comparison.slices
+    assert extreme_slice.mean_diff == extreme_slice.ci_low == extreme_slice.ci_high == math.inf
+
+
+def test_audit_loads_comparisons_with_overflowing_differences(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    paths = [tmp_path / "first.json", tmp_path / "second.json"]
+    for index, path in enumerate(paths):
+        baseline = _run(f"b{index}", [("a", EDGE, True), ("b", -EDGE, False)])
+        candidate = _run(f"c{index}", [("a", -EDGE, False), ("b", EDGE, True)])
+        for run in (baseline, candidate):
+            run.results.extend(
+                [_result("c", 0.0, True), _result("d", 0.0, True), _result("e", 5.0, True)]
+            )
+        _write_comparison(path, baseline, candidate)
+
+    assert main(["audit", *(str(path) for path in paths), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert {item["config"]: item["total_score"] for item in report["abilities"]} == {
+        "b0": 5.0,
+        "c0": 5.0,
+        "b1": 5.0,
+        "c1": 5.0,
+    }
+
+
+def test_select_loads_an_overflowing_gain(tmp_path: Path) -> None:
+    path = tmp_path / "gain.json"
+    _write_comparison(
+        path, _run("baseline", [("a", -EDGE, False)]), _run("candidate", [("a", EDGE, True)])
+    )
+
+    suite = Suite("suite", cases=[Case("a", "input", None, [])])
+    result = prioritize(suite, [load_comparison(path)], budget=1)
+
+    assert result.selected[0].priority == 0.0
+
+
+def test_bayes_normalizes_negative_zero_delta_in_both_report_formats(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "comparison.json"
+    baseline = _run("baseline", [("a", 1.0, True), ("b", 0.0, False)])
+    candidate = _run("candidate", [("a", 0.0, False), ("b", 1.0, True)])
+    _write_comparison(path, baseline, candidate)
+
+    out = tmp_path / "posterior.json"
+    assert main(["bayes", str(path), "--delta", "-0.0", "--json", "--out", str(out)]) == 0
+    printed = capsys.readouterr().out
+    assert printed == out.read_text(encoding="utf-8")
+    assert '"delta": 0.0' in printed
+    report = json.loads(printed)
+    assert report["p_worse_than_delta"] == report["p_worse"] == 0.5
+
+    assert main(["bayes", str(path), "--delta", "-0.0"]) == 0
+    assert "\ndelta=0.000000\n" in capsys.readouterr().out
+
+
+def test_bayes_text_normalizes_a_small_negative_result_rounded_to_zero() -> None:
+    baseline = _run("baseline", [("a", 1.0, True)])
+    candidate = _run("candidate", [("a", 0.0, False)])
+    result = replace(bayesian_comparison(_comparison(baseline, candidate)), ci_high=-1e-10)
+
+    assert "\nci_high=0.000000\n" in format_bayes(result)
+    assert result.ci_high == -1e-10
+
+
+def test_audit_lint_files_duplicate_newline_id_against_the_case(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    case_id = "a\nb"
+    path = tmp_path / "duplicate.json"
+    path.write_text(
+        json.dumps({"cases": [{"id": case_id, "input": value} for value in ["one", "two"]]}),
+        encoding="utf-8",
+    )
+
+    assert main(["audit", str(path), "--json"]) == 1
+    findings = json.loads(capsys.readouterr().out)["findings"]
+    assert len(findings) == 1
+    assert findings[0]["check"] == "duplicate_case_id"
+    assert findings[0]["case"] == case_id
+
+
+def test_select_rejects_an_integer_score_outside_the_finite_float_range() -> None:
+    suite = Suite("suite", cases=[Case("a", "input", None, [])])
+    comparison = compare_runs(
+        _run("baseline", [("a", 1.0, True)]), _run("candidate", [("a", 0.0, False)]), n_boot=5
+    )
+    comparison = replace(
+        comparison, per_case=[replace(comparison.per_case[0], baseline_score=HUGE_INT)]
+    )
+
+    with pytest.raises(
+        ValueError, match=r"^comparison 1 case 'a' baseline score must be a finite number$"
+    ):
+        prioritize(suite, [comparison], budget=1)
