@@ -706,15 +706,56 @@ def _population_std(values: Sequence[float]) -> float:
     keeps the tiny differences between near-equal values exact
     (``0.5 +/- 1e-13`` must keep its ``1e-13`` deviation to 1e-12 relative,
     which a rounded float mean destroys), and scaling the deviations by the
-    largest one keeps every square in ``[-1, 1]``. Identical values give
-    exactly 0.0, and ``(1e200, 2e200)`` gives exactly ``5e199``.
+    largest one keeps every square in ``[-1, 1]``. When that shift is not
+    finite, or ``math.fsum`` overflows on the shifted residuals, scale by
+    the largest magnitude first and center in those units. Identical values
+    give exactly 0.0, ``(1e200, 2e200)`` gives exactly ``5e199``, and finite
+    inputs produce a finite result.
     """
     if not values:
         raise ValueError("population std needs at least one value")
+    deviations = _centered_deviations(values)
+    if deviations is not None:
+        return _scaled_std(deviations)
+    peak = max(abs(value) for value in values)
+    if peak == 0.0 or not math.isfinite(peak):
+        return 0.0
+    scaled = _centered_deviations([value / peak for value in values])
+    if scaled is None:
+        return 0.0
+    return peak * _scaled_std(scaled)
+
+
+def _centered_deviations(values: Sequence[float]) -> list[float] | None:
+    """Deviations from the mean after shifting by the first value.
+
+    ``None`` when a residual or the shifted mean is not finite, including
+    when ``math.fsum`` raises ``OverflowError`` on the shifted values.
+    """
     ref = values[0]
-    shifted = [value - ref for value in values]
-    center = math.fsum(shifted) / len(shifted)
-    deviations = [value - center for value in shifted]
+    shifted: list[float] = []
+    for value in values:
+        gap = value - ref
+        if not math.isfinite(gap):
+            return None
+        shifted.append(gap)
+    try:
+        center = math.fsum(shifted) / len(shifted)
+    except OverflowError:
+        return None
+    if not math.isfinite(center):
+        return None
+    deviations: list[float] = []
+    for value in shifted:
+        gap = value - center
+        if not math.isfinite(gap):
+            return None
+        deviations.append(gap)
+    return deviations
+
+
+def _scaled_std(deviations: Sequence[float]) -> float:
+    """Population standard deviation. Squares are scaled into ``[0, 1]``."""
     top = max((abs(value) for value in deviations), default=0.0)
     if top == 0.0:
         return 0.0
@@ -736,8 +777,8 @@ def _fit_scale(
         raise ValueError("feature rows must have the same length")
     for column in range(width):
         values = [row[column] for row in rows]
-        # _population_std scales by the largest magnitude first, so squared
-        # deviations never overflow; identical values give exactly 0.0.
+        # Shift-then-scale, falling back to a scale-first population std when
+        # the shift overflows. Identical values give exactly 0.0.
         center = mean(values)
         std = _population_std(values)
         means.append(center)

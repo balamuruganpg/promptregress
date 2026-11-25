@@ -1255,6 +1255,7 @@ def main(argv: list[str] | None = None) -> int:
         ProviderError,
         OSError,
         ValueError,
+        OverflowError,
         ImportError,
         json.JSONDecodeError,
     ) as exc:

@@ -40,6 +40,13 @@ def write_json(
     (``max_regression=0``, pass-rate floor 0, significance not required).
     ``failure_clusters`` is included only when the caller passes a list
     (including an empty list). ``None`` leaves the report unchanged.
+
+    Finite numbers are strict JSON. A NaN still raises ``ValueError``.
+    Signed infinities, which :func:`promptregress.stats.compare_runs` stores
+    when a difference of finite scores does not fit, are written as
+    ``Infinity`` and ``-Infinity``. :func:`json.loads` reads those tokens
+    back as the same floats, and :func:`promptregress.risk.load_comparison`
+    returns the comparison unchanged.
     """
     resolved = verdict if verdict is not None else evaluate_gate(comparison)
     payload = comparison_to_dict(
@@ -48,7 +55,7 @@ def write_json(
         failure_clusters=failure_clusters,
         embedder=embedder,
     )
-    _write_text(path, json.dumps(payload, indent=2, allow_nan=False) + "\n")
+    _write_text(path, _dumps_comparison(payload))
 
 
 def write_markdown(
@@ -1702,6 +1709,33 @@ def _pairwise_to_dict(summary: PairwiseSummary) -> dict[str, Any]:
             for case in summary.cases
         ],
     }
+
+
+def _dumps_comparison(payload: dict[str, Any]) -> str:
+    """Serialize a comparison payload, preserving signed infinities.
+
+    Finite reports use ``allow_nan=False``, so a NaN still raises
+    ``ValueError`` and the bytes of an ordinary report do not change.
+    ``Infinity`` and ``-Infinity`` are the form :func:`json.loads` reads
+    back as the floats :func:`promptregress.stats.compare_runs` stored.
+    """
+    try:
+        text = json.dumps(payload, indent=2, allow_nan=False)
+    except ValueError as exc:
+        if _contains_nan(payload) or "Out of range float" not in str(exc):
+            raise
+        text = json.dumps(payload, indent=2, allow_nan=True)
+    return text + "\n"
+
+
+def _contains_nan(value: object) -> bool:
+    if isinstance(value, float):
+        return math.isnan(value)
+    if isinstance(value, dict):
+        return any(_contains_nan(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_nan(item) for item in value)
+    return False
 
 
 def _write_text(path: str | Path, text: str) -> None:

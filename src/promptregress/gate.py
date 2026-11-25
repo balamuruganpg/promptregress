@@ -87,6 +87,13 @@ def evaluate_gate(
     (``-ci_low``) fails the regression check: ``nan > budget`` and
     ``-inf > budget`` are false in IEEE compare and would otherwise PASS.
 
+    Regression and pass-rate reasons print six decimal places. When that
+    rendering makes the two compared values look identical, or rounds a
+    nonzero value to a signed zero and hides the comparison, those reasons
+    use more places. The printed pair then compares the same way as the
+    full-precision check, and each numeral parses back to the value that
+    was compared. Other checks keep six places. The decision is unchanged.
+
     Every check that runs adds a reason that includes the numbers it used.
     ``passed`` is false when any reason starts with ``FAIL``.
     """
@@ -104,11 +111,13 @@ def evaluate_gate(
     reasons: list[str] = []
     regression_upper = -comparison.ci_low
     level = int(round((1.0 - comparison.alpha) * 100))
+    places = _decision_places(regression_upper, max_regression)
     detail = (
-        f"mean_diff {_fmt(comparison.mean_diff)}, "
-        f"{level}% CI [{_fmt(comparison.ci_low)}, {_fmt(comparison.ci_high)}], "
-        f"regression upper bound {_fmt(regression_upper)}, "
-        f"max_regression {_fmt(max_regression)}"
+        f"mean_diff {_fmt_at(comparison.mean_diff, places)}, "
+        f"{level}% CI ["
+        f"{_fmt_at(comparison.ci_low, places)}, {_fmt_at(comparison.ci_high, places)}], "
+        f"regression upper bound {_fmt_at(regression_upper, places)}, "
+        f"max_regression {_fmt_at(max_regression, places)}"
     )
     # Same IEEE trap as an invalid cost / latency / drift observation:
     # ``nan > budget`` and ``-inf > budget`` never hold, so a non-finite
@@ -121,7 +130,11 @@ def evaluate_gate(
         reasons.append(f"PASS regression: upper bound is within max_regression ({detail}).")
 
     pass_rate = comparison.candidate.pass_rate
-    rate_detail = f"candidate pass rate {_fmt(pass_rate)}, minimum {_fmt(min_candidate_pass_rate)}"
+    rate_places = _decision_places(pass_rate, min_candidate_pass_rate)
+    rate_detail = (
+        f"candidate pass rate {_fmt_at(pass_rate, rate_places)}, "
+        f"minimum {_fmt_at(min_candidate_pass_rate, rate_places)}"
+    )
     if pass_rate < min_candidate_pass_rate:
         reasons.append(f"FAIL pass rate: candidate is below the minimum ({rate_detail}).")
     else:
@@ -272,4 +285,59 @@ def _usd(value: float) -> str:
 
 
 def _fmt(value: float) -> str:
-    return f"{value:.6f}"
+    return _fmt_at(value, 6)
+
+
+def _fmt_at(value: float, places: int) -> str:
+    return f"{value:.{places}f}"
+
+
+def _decision_places(left: float, right: float) -> int:
+    """Decimal places that keep a printed comparison faithful.
+
+    Six places is the default. More places are used when that rendering
+    makes the two strings identical, or rounds a nonzero value to a signed
+    zero and hides the comparison. The extra places are the fewest at which
+    the printed numerals compare the same way as the full-precision values
+    and each numeral parses back to the value it came from.
+    """
+    if not math.isfinite(left) or not math.isfinite(right):
+        return 6
+    left_text = f"{left:.6f}"
+    right_text = f"{right:.6f}"
+    if left_text != right_text and not _signed_zero_hides(left, right, left_text, right_text):
+        return 6
+    agreed: int | None = None
+    for places in range(6, 360):
+        left_text = f"{left:.{places}f}"
+        right_text = f"{right:.{places}f}"
+        if not _printed_agrees(left, right, left_text, right_text):
+            continue
+        if float(left_text) == left and float(right_text) == right:
+            return places
+        if agreed is None:
+            agreed = places
+    return 6 if agreed is None else agreed
+
+
+def _signed_zero_hides(left: float, right: float, left_text: str, right_text: str) -> bool:
+    hidden = _nonzero_as_zero(left, left_text) or _nonzero_as_zero(right, right_text)
+    return hidden and not _printed_agrees(left, right, left_text, right_text)
+
+
+def _nonzero_as_zero(value: float, text: str) -> bool:
+    if value == 0.0 or not math.isfinite(value):
+        return False
+    body = text[1:] if text.startswith("-") else text
+    whole, dot, frac = body.partition(".")
+    return dot == "." and whole in {"0", ""} and frac != "" and set(frac) <= {"0"}
+
+
+def _printed_agrees(left: float, right: float, left_text: str, right_text: str) -> bool:
+    printed_left = float(left_text)
+    printed_right = float(right_text)
+    return (
+        (left > right) == (printed_left > printed_right)
+        and (left < right) == (printed_left < printed_right)
+        and (left == right) == (printed_left == printed_right)
+    )

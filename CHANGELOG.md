@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.15.4 — 2026-11-25
+
+### Fixed
+
+- Gate reasons no longer quote the same six-decimal numerals on both sides of a check the full-precision comparison decided the other way. When those six-decimal forms are identical, or a nonzero value rounds to a signed zero and hides the decision, the regression and pass-rate reasons print enough extra digits that the printed values compare the same way and parse back to the values that were compared. A sub-micro regression that used to display as all zeros shows the tiny figures that failed the gate. The decision itself is unchanged, including the documented equal-template line `regression upper bound -0.000000`.
+- `risk._population_std` stays finite for finite scores when shifting by the first value overflows. A near-zero first value followed by `1e308`, and a column that mixes `1e308` with `-1e308`, no longer raise `OverflowError` or return NaN. The shift-first path is unchanged for `(1e200, 2e200)`, identical values, and `0.5 +/- 1e-13`. An `OverflowError` that still escapes training is a CLI error exit (2), not a traceback.
+- `write_json` emits the signed infinity `compare_runs` stores when a difference of two finite scores does not fit. The tokens are `Infinity` and `-Infinity`, which the comparison loader reads back as the same floats, and `load_comparison` returns that comparison unchanged. NaN is still rejected, and a finite report stays strict JSON.
+
 ## 0.15.3 — 2026-11-18
 
 ### Fixed
