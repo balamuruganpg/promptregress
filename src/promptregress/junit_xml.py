@@ -70,7 +70,9 @@ latency is exported as ``time="0.000000"``.
 """
 
 import math
+import os
 import re
+import tempfile
 from collections.abc import Mapping, Sequence
 from io import BytesIO
 from pathlib import Path
@@ -99,6 +101,52 @@ def strip_unpaired_surrogates(text: str) -> str:
     plain-text reports need the same treatment before they hit the wire.
     """
     return _UNPAIRED_SURROGATES.sub("", text)
+
+
+def atomic_write_text(path: str | Path, text: str) -> None:
+    """Write ``text`` to ``path`` atomically.
+
+    The text goes to a temporary file in the same directory and is moved
+    over the target with :func:`os.replace`, the pattern
+    ``ResponseCache.put`` already uses. A partial or interrupted write
+    leaves the previous file intact instead of a truncated one, and a
+    concurrent reader never sees an empty or half-written file.
+    """
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, tmp_name = tempfile.mkstemp(
+        prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
+    )
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, target)
+    except Exception:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
+
+
+def paths_same_file(left: str | Path, right: str | Path) -> bool:
+    """True when two paths name the same file, through links or directly.
+
+    ``os.path.samefile`` covers symlinks and hard links when both paths
+    exist. When it cannot answer (a path is missing), the resolved names
+    are compared instead. Mirrors the ``_same_path`` checks in
+    ``select``/``synth``.
+    """
+    left_path, right_path = Path(left), Path(right)
+    try:
+        return os.path.samefile(left_path, right_path)
+    except OSError:
+        pass
+    try:
+        return left_path.resolve() == right_path.resolve()
+    except (OSError, RuntimeError):
+        return left_path.absolute() == right_path.absolute()
 
 
 def write_run_junit(path: str | Path, result: RunResult) -> None:

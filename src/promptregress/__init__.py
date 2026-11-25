@@ -1,6 +1,6 @@
 """Regression testing for LLM prompts and models."""
 
-__version__ = "0.15.5"
+__version__ = "0.15.6"
 
 from promptregress.gate import GateRule, GateVerdict
 from promptregress.models import (

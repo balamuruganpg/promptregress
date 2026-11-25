@@ -29,6 +29,7 @@ prints it, trend skips it, and changepoint reports it as non-finite.
 
 import json
 import math
+import os
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
@@ -144,7 +145,18 @@ def append_history(record: Mapping[str, Any], path: str | Path | None = None) ->
     if "\n" in line or "\r" in line:
         raise ValueError("history record must encode as one line")
     target.parent.mkdir(parents=True, exist_ok=True)
+    # A previous append may have been cut short mid-line (a full disk, a
+    # killed process). Terminate that partial line first, so this record
+    # starts on its own line instead of gluing onto the fragment — a glued
+    # line is invalid JSON and the reader would drop both rows.
+    needs_separator = False
+    if target.exists() and target.stat().st_size > 0:
+        with target.open("rb") as handle:
+            handle.seek(-1, os.SEEK_END)
+            needs_separator = handle.read(1) != b"\n"
     with target.open("a", encoding="utf-8") as handle:
+        if needs_separator:
+            handle.write("\n")
         handle.write(line + "\n")
     return target
 
@@ -173,7 +185,13 @@ def load_history(path: str | Path | None = None) -> tuple[list[dict[str, Any]], 
         raise ValueError(f"{target}: not valid UTF-8: {exc}") from exc
     records: list[dict[str, Any]] = []
     notes: list[str] = []
-    for line_number, raw in enumerate(text.splitlines(), start=1):
+    # Split on "\n" only: str.splitlines() also breaks on U+2028, U+2029,
+    # and U+0085, which json.dumps(ensure_ascii=False) can emit raw inside
+    # a string value — such a row would be cut in two and dropped as
+    # invalid JSON. A trailing "\r" (CRLF file) is stripped per line.
+    for line_number, raw in enumerate(text.split("\n"), start=1):
+        if raw.endswith("\r"):
+            raw = raw[:-1]
         raw = raw.lstrip("\ufeff")
         if raw.strip() == "":
             continue

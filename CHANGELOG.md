@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.15.6 — 2026-11-26
+
+### Fixed
+
+- Output paths can no longer destroy input files. `compare --report-json`, `--report-md`, and `--report-html` refuse a path that names the suite file itself, including through a symlink or a hard link; `pareto --out` and `bayes --out` refuse a path that names one of their input files. The refusal is a usage error (exit 2) before anything is written, matching the existing `select`/`synth` rule.
+- Report and JSON writes are atomic. The compare report (`write_json`), the CLI JSON writer behind `flaky`/`calibrate`/`audit` and friends, and the `pareto`/`bayes` writers now write to a temporary file in the same directory and `os.replace` it over the target — the pattern `ResponseCache.put` already used. A partial or interrupted write leaves the previous file intact, and a concurrent reader never sees an empty or half-written file.
+- A history append that was cut short mid-line no longer takes the next successful row with it. `append_history` terminates a partial last line before appending, so the new record stands on its own line; the fragment is reported by the reader as an invalid row instead of gluing to and swallowing the new record.
+- History rows whose values contain U+2028, U+2029, or U+0085 are no longer dropped on read. `load_history` splits on `\n` only (with a per-line `\r` strip for CRLF files) instead of `str.splitlines()`, which also breaks on those three characters that `json.dumps(ensure_ascii=False)` can emit raw inside a string.
+
 ## 0.15.5 — 2026-11-25
 
 ### Fixed

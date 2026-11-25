@@ -67,7 +67,13 @@ from promptregress.history import (
     write_trend_html,
 )
 from promptregress.irt import fit_runs, format_irt, irt_to_dict, load_run_report
-from promptregress.junit_xml import strip_unpaired_surrogates, write_compare_junit, write_run_junit
+from promptregress.junit_xml import (
+    atomic_write_text,
+    paths_same_file,
+    strip_unpaired_surrogates,
+    write_compare_junit,
+    write_run_junit,
+)
 from promptregress.loading import SuiteError, load_suite, suite_schema_path
 from promptregress.matrix import (
     MatrixConfig,
@@ -1629,6 +1635,13 @@ def _cmd_compare(args: argparse.Namespace) -> int:
             embedder=embedder,
             seed=int(args.seed),
         )
+    for flag, out_path in (
+        ("--report-json", args.report_json),
+        ("--report-md", args.report_md),
+        ("--report-html", args.report_html),
+    ):
+        if out_path and paths_same_file(str(out_path), str(args.suite)):
+            raise ValueError(f"{flag} must be a different path from --suite")
     if args.report_json:
         write_json(
             comparison,
@@ -1894,6 +1907,8 @@ def _cmd_pareto(args: argparse.Namespace) -> int:
     report = pareto_from_files([str(path) for path in args.reports])
     payload = pareto_to_dict(report)
     if args.out:
+        if any(paths_same_file(str(args.out), str(path)) for path in args.reports):
+            raise ValueError("--out must be a different path from the input reports")
         write_pareto_json(payload, str(args.out))
     if args.json:
         print(json.dumps(payload, indent=2, allow_nan=False))
@@ -1993,6 +2008,8 @@ def _cmd_bayes(args: argparse.Namespace) -> int:
     result = bayes_from_path(str(args.comparison), delta=float(args.delta), seed=int(args.seed))
     payload = bayes_to_dict(result)
     if args.out:
+        if paths_same_file(str(args.out), str(args.comparison)):
+            raise ValueError("--out must be a different path from the comparison file")
         write_bayes_json(payload, str(args.out))
     if args.json:
         print(json.dumps(payload, indent=2, allow_nan=False))
@@ -2246,9 +2263,7 @@ def _write_history(record: dict[str, Any]) -> None:
 
 
 def _write_json(path: str, payload: object) -> None:
-    target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, allow_nan=False) + "\n")
 
 
 def _build_provider(args: argparse.Namespace) -> Provider:

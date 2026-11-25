@@ -11,7 +11,7 @@ from promptregress.calibration import JUDGE_AGREEMENT_DEFINITION
 from promptregress.cluster import FailureCluster
 from promptregress.drift import DRIFT_DEFINITION
 from promptregress.gate import GateVerdict, _decision_places, evaluate_gate
-from promptregress.junit_xml import strip_unpaired_surrogates
+from promptregress.junit_xml import atomic_write_text, strip_unpaired_surrogates
 from promptregress.models import (
     CaseResult,
     Comparison,
@@ -1744,11 +1744,10 @@ def _contains_nan(value: object) -> bool:
 
 
 def _write_text(path: str | Path, text: str) -> None:
-    target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
     # Surrogates are stripped so UTF-8 write cannot raise UnicodeEncodeError
     # when model output or case ids carry a lone \\ud800-style character.
-    target.write_text(strip_unpaired_surrogates(text), encoding="utf-8")
+    # The write is atomic: a partial write never truncates the previous file.
+    atomic_write_text(path, strip_unpaired_surrogates(text))
 
 
 def _fmt_usd(value: float | None) -> str:

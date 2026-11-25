@@ -87,7 +87,7 @@ from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 
-from promptregress.junit_xml import strip_unpaired_surrogates
+from promptregress.junit_xml import atomic_write_text, strip_unpaired_surrogates
 from promptregress.models import CaseResult, Comparison, RunResult
 from promptregress.risk import load_comparison
 
@@ -345,7 +345,7 @@ def write_bayes_json(payload: Mapping[str, object], path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, indent=2, allow_nan=False) + "\n"
-    target.write_text(strip_unpaired_surrogates(text), encoding="utf-8")
+    atomic_write_text(target, strip_unpaired_surrogates(text))
 
 
 def _prob_d_less_than(

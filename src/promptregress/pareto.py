@@ -55,7 +55,7 @@ from pathlib import Path
 from typing import Any
 
 from promptregress.irt import run_from_dict
-from promptregress.junit_xml import strip_unpaired_surrogates
+from promptregress.junit_xml import atomic_write_text, strip_unpaired_surrogates
 from promptregress.loading import strip_utf8_bom_text
 from promptregress.models import RunResult
 
@@ -271,7 +271,7 @@ def write_pareto_json(payload: Mapping[str, object], path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, indent=2, allow_nan=False) + "\n"
-    target.write_text(strip_unpaired_surrogates(text), encoding="utf-8")
+    atomic_write_text(target, strip_unpaired_surrogates(text))
 
 
 def _variant_dict(row: ParetoRow) -> dict[str, object]:
