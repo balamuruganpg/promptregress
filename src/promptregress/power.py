@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from promptregress.loading import strip_utf8_bom_text
+from promptregress.risk import load_comparison
 from promptregress.stats import cohens_dz
 
 POWER_GRID = (0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95)
@@ -182,6 +183,28 @@ def achieved_power(diffs: Sequence[float], alpha: float = 0.05) -> float:
     return analytic_power(effect, n, alpha_value)
 
 
+def achieved_from_dz(observed_dz: float, n: int, alpha: float = 0.05) -> float:
+    """Plug-in normal power from an already computed Cohen's dz and ``n``.
+
+    Same results as :func:`achieved_power` without reading the diffs again.
+    ``n < 2`` returns 0. A non-finite dz with ``n >= 2`` returns 1. A zero
+    effect returns ``alpha``.
+    """
+    alpha_value = _alpha(alpha)
+    if isinstance(n, bool) or not isinstance(n, int):
+        raise ValueError("n must be an integer >= 0")
+    if isinstance(observed_dz, bool) or not isinstance(observed_dz, (int, float)):
+        raise ValueError("effect_dz must be a number")
+    if n < 2:
+        return 0.0
+    effect = abs(float(observed_dz))
+    if math.isnan(effect):
+        raise ValueError("effect_dz must be a number")
+    if not math.isfinite(effect):
+        return 1.0
+    return analytic_power(effect, n, alpha_value)
+
+
 def power_grid(
     effect_dz: float,
     alpha: float = 0.05,
@@ -199,8 +222,33 @@ def power_grid(
 
 
 def load_report_diffs(path: str | Path) -> list[float]:
-    """Read per-case ``diff`` values from a comparison JSON report."""
+    """Read the per-case diffs :func:`load_report_effect` counts."""
+    return load_report_effect(path)[0]
+
+
+def load_report_effect(path: str | Path) -> tuple[list[float], float]:
+    """Diffs and Cohen's dz for ``power --from-report``.
+
+    A report with ``baseline`` and ``candidate`` runs is rebuilt by
+    :func:`promptregress.risk.load_comparison`, the same pairs ``bayes``
+    counts. Stored ``per_case`` diffs are not a second source, including a
+    signed infinity ``write_json`` emits when a finite-score difference
+    overflows. The returned dz is the rebuilt comparison's ``cohens_dz``.
+    A shorthand document that only has ``per_case`` still uses those diffs,
+    and a non-finite shorthand diff raises ``diffs must be finite``.
+    """
     target = Path(path)
+    payload = _read_json_payload(target)
+    if _has_run_sides(payload):
+        comparison = load_comparison(target)
+        diffs = [row.diff for row in comparison.per_case]
+        if not diffs:
+            raise ValueError(f"{target}: comparison report has no per-case diffs")
+        return diffs, comparison.cohens_dz
+    return _shorthand_effect(target, payload)
+
+
+def _read_json_payload(target: Path) -> object:
     try:
         # utf-8-sig (+ residual / per-line BOM strip) so a Windows-saved
         # compare report loads for ``power --from-report``; json.loads
@@ -209,22 +257,39 @@ def load_report_diffs(path: str | Path) -> list[float]:
     except UnicodeError as exc:
         raise ValueError(f"{target}: not valid UTF-8: {exc}") from exc
     try:
-        payload = json.loads(text)
+        payload: object = json.loads(text)
     except json.JSONDecodeError as exc:
         raise ValueError(f"{target}: invalid JSON: {exc.msg}") from exc
+    return payload
+
+
+def _has_run_sides(payload: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and isinstance(payload.get("baseline"), dict)
+        and isinstance(payload.get("candidate"), dict)
+    )
+
+
+def _shorthand_effect(target: Path, payload: object) -> tuple[list[float], float]:
     if not isinstance(payload, dict) or not isinstance(payload.get("per_case"), list):
         raise ValueError(f"{target}: expected a comparison report with per_case")
+    rows = payload["per_case"]
     diffs: list[float] = []
-    for index, row in enumerate(payload["per_case"]):
+    for index, row in enumerate(rows):
         if not isinstance(row, dict) or "diff" not in row:
             raise ValueError(f"{target}: per_case[{index}] needs a diff")
         raw = row["diff"]
         if isinstance(raw, bool) or not isinstance(raw, (int, float)):
             raise ValueError(f"{target}: per_case[{index}].diff must be a number")
-        diffs.append(_finite(raw))
+        try:
+            number = float(raw)
+        except OverflowError as exc:
+            raise ValueError(f"{target}: per_case[{index}].diff must be a finite number") from exc
+        diffs.append(_finite(number))
     if not diffs:
         raise ValueError(f"{target}: comparison report has no per-case diffs")
-    return diffs
+    return diffs, cohens_dz(diffs)
 
 
 def required_n_to_dict(estimate: RequiredN) -> dict[str, object]:
@@ -361,7 +426,10 @@ def _check_sim(n_sim: int, seed: int) -> None:
 
 
 def _finite(value: float) -> float:
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError("diffs must be finite") from exc
     if not math.isfinite(number):
         raise ValueError("diffs must be finite")
     return number

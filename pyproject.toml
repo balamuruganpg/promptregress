@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promptregress"
-version = "0.15.4"
+version = "0.15.5"
 description = "Regression testing for LLM prompts and models with paired statistics and a CI gate."
 readme = "README.md"
 requires-python = ">=3.10"

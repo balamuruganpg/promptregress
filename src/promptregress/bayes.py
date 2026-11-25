@@ -270,7 +270,9 @@ def bayes_from_path(
 
     The loader rebuilds the two runs and pairs them by case id. Cells are
     counted from those runs' ``passed`` bits. A hand-edited ``per_case``
-    block that disagrees with ``results`` is not a second source.
+    block that disagrees with ``results`` is not a second source. ``power``
+    uses those same rebuilt pairs, including a signed infinity ``write_json``
+    stored when a difference of two finite scores overflows.
     """
     margin = _validate_delta(delta)
     stored_seed = _validate_seed(seed)

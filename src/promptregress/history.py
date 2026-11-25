@@ -11,6 +11,20 @@ single file with an inline SVG polyline and no external assets. The ASCII
 sparkline maps a score in ``[0, 1]`` onto eight blocks, low to high. Scores
 outside that range are clamped. The scale is absolute, so a flat 1.0 is a
 row of full blocks rather than a rescaled wiggle.
+
+Stored metrics are typed. ``mean_score``, ``mean_diff``, and
+``pairwise_win_rate`` print only when they are an int or a float and not a
+bool. ``gate_passed`` prints only when it is a JSON bool (``true`` is
+``gate=pass``, ``false`` is ``gate=fail``). A string, null, bool, or other
+non-number is not coerced, and the digits ``0`` and ``1`` are not a gate.
+The first bad field, in the order mean score, mean diff, pairwise win
+rate, then gate, is a ``load_history`` note
+``path:line: metrics.<field> must be a finite number`` or
+``metrics.gate_passed must be a boolean``. The row stays in the loaded
+records. The table omits it only when the summary would be empty. An
+integer that does not fit in a float is a hard error with that same
+``path:line`` wording, not a skipped line. Infinity stays a value: history
+prints it, trend skips it, and changepoint reports it as non-finite.
 """
 
 import json
@@ -18,7 +32,7 @@ import math
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeGuard
 
 from promptregress.junit_xml import strip_unpaired_surrogates
 from promptregress.loading import strip_utf8_bom_text
@@ -141,6 +155,11 @@ def load_history(path: str | Path | None = None) -> tuple[list[dict[str, Any]], 
     Malformed lines are skipped. Their descriptions are returned as notes.
     ``OSError`` propagates. Invalid UTF-8 raises ``ValueError`` with a
     ``not valid UTF-8`` message (same shape as calibration / run reports).
+
+    A present metric of the wrong type is kept and noted (see the module
+    docstring). The first bad field wins. An integer metric that does not
+    fit in a float raises ``ValueError`` ``path:line: metrics.<field> must
+    be a finite number`` instead of skipping the row.
     """
     target = default_history_path() if path is None else Path(path)
     if not target.exists():
@@ -166,6 +185,10 @@ def load_history(path: str | Path | None = None) -> tuple[list[dict[str, Any]], 
         if not isinstance(payload, dict):
             notes.append(f"{target}:{line_number}: row is not an object")
             continue
+        _reject_metric_overflow(payload, target, line_number)
+        problem = _metrics_type_problem(payload)
+        if problem is not None:
+            notes.append(f"{target}:{line_number}: {problem}")
         records.append(payload)
     return records, notes
 
@@ -173,6 +196,7 @@ def load_history(path: str | Path | None = None) -> tuple[list[dict[str, Any]], 
 def format_history_table(records: Sequence[Mapping[str, Any]]) -> str:
     """Aligned text table. Ends with a newline. Empty history says so."""
     header = ("timestamp", "command", "suite", "summary")
+    visible = [record for record in records if _show_history_row(record)]
     body = [
         (
             _cell(record.get("timestamp", "")),
@@ -180,7 +204,7 @@ def format_history_table(records: Sequence[Mapping[str, Any]]) -> str:
             _cell(record.get("suite", "")),
             _summary(record),
         )
-        for record in records
+        for record in visible
     ]
     if not body:
         return "timestamp  command  suite  summary\n(no runs)\n"
@@ -202,7 +226,8 @@ def suite_points(
 ) -> list[tuple[str, float]]:
     """``(timestamp, mean_score)`` rows for ``suite``, in file order.
 
-    Rows without a finite ``metrics.mean_score`` are skipped.
+    Rows without a finite ``metrics.mean_score`` are skipped. An integer
+    that does not fit in a float raises ``ValueError``.
     """
     points: list[tuple[str, float]] = []
     for record in records:
@@ -214,7 +239,12 @@ def suite_points(
         score = metrics.get("mean_score")
         if isinstance(score, bool) or not isinstance(score, (int, float)):
             continue
-        value = float(score)
+        try:
+            value = float(score)
+        except OverflowError as exc:
+            stamp = record.get("timestamp")
+            where = f"record ({stamp})" if isinstance(stamp, str) and stamp != "" else "record"
+            raise ValueError(f"{where}: mean_score must be a finite number") from exc
         if not math.isfinite(value):
             continue
         stamp = record.get("timestamp")
@@ -377,23 +407,81 @@ def _sparkline_svg(values: Sequence[float]) -> str:
     )
 
 
+_NUMBER_FIELDS = ("mean_score", "mean_diff", "pairwise_win_rate")
+
+
+def _is_json_number(value: object) -> TypeGuard[int | float]:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _reject_metric_overflow(record: Mapping[str, Any], target: Path, line_number: int) -> None:
+    """Raise when a numeric metric does not fit in a float."""
+    metrics = record.get("metrics")
+    if not isinstance(metrics, dict):
+        return
+    for field in _NUMBER_FIELDS:
+        if field not in metrics:
+            continue
+        value = metrics[field]
+        if not _is_json_number(value):
+            continue
+        try:
+            float(value)
+        except OverflowError as exc:
+            raise ValueError(
+                f"{target}:{line_number}: metrics.{field} must be a finite number"
+            ) from exc
+
+
+def _metrics_type_problem(record: Mapping[str, Any]) -> str | None:
+    """First mistyped metric, or ``None`` when every present field is typed."""
+    metrics = record.get("metrics")
+    if not isinstance(metrics, dict):
+        return None
+    for field in _NUMBER_FIELDS:
+        if field not in metrics:
+            continue
+        if not _is_json_number(metrics[field]):
+            return f"metrics.{field} must be a finite number"
+    if "gate_passed" in metrics and not isinstance(metrics["gate_passed"], bool):
+        return "metrics.gate_passed must be a boolean"
+    return None
+
+
+def _render_metric(value: object, field: str) -> str | None:
+    """``field=digits`` for a real number. A wrong type renders nothing."""
+    if not _is_json_number(value):
+        return None
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError(f"metrics.{field} must be a finite number") from exc
+    return f"{field}={number:.6f}"
+
+
 def _summary(record: Mapping[str, Any]) -> str:
     metrics = record.get("metrics")
     if not isinstance(metrics, dict):
         return ""
     parts: list[str] = []
-    mean_score = metrics.get("mean_score")
-    if isinstance(mean_score, (int, float)) and not isinstance(mean_score, bool):
-        parts.append(f"mean_score={float(mean_score):.6f}")
-    mean_diff = metrics.get("mean_diff")
-    if isinstance(mean_diff, (int, float)) and not isinstance(mean_diff, bool):
-        parts.append(f"mean_diff={float(mean_diff):.6f}")
-    if "gate_passed" in metrics:
+    for field in ("mean_score", "mean_diff"):
+        if field not in metrics:
+            continue
+        rendered = _render_metric(metrics[field], field)
+        if rendered is not None:
+            parts.append(rendered)
+    if isinstance(metrics.get("gate_passed"), bool):
         parts.append("gate=pass" if metrics["gate_passed"] else "gate=fail")
-    pairwise = metrics.get("pairwise_win_rate")
-    if isinstance(pairwise, (int, float)) and not isinstance(pairwise, bool):
-        parts.append(f"pairwise_win_rate={float(pairwise):.6f}")
+    if "pairwise_win_rate" in metrics:
+        rendered = _render_metric(metrics["pairwise_win_rate"], "pairwise_win_rate")
+        if rendered is not None:
+            parts.append(rendered)
     return " ".join(parts)
+
+
+def _show_history_row(record: Mapping[str, Any]) -> bool:
+    """Hide a row only when its summary is empty because a metric is mistyped."""
+    return bool(_summary(record)) or _metrics_type_problem(record) is None
 
 
 def _cell(value: object) -> str:

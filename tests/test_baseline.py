@@ -396,7 +396,7 @@ def test_case_id_mismatch_lists_the_first_current_id(
         ]
     )
     assert code == 2
-    assert "first differing case id: zzz_only_current" in capsys.readouterr().err
+    assert "first differing case id: 'zzz_only_current'" in capsys.readouterr().err
 
 
 def test_reordered_case_ids_still_compare(

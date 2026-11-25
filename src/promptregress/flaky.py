@@ -266,15 +266,32 @@ def _flip_count(passed: Sequence[bool]) -> int:
 
 
 def _population_sd(values: Sequence[float]) -> float:
-    """Population standard deviation. Divide by N. One value is 0."""
+    """Population standard deviation. Divide by N. One value is 0.
+
+    Identical values are exactly 0, including when their sum does not fit in
+    a float. An overflow, or a variance that is not finite, raises
+    ``ValueError``. A spread of extreme finite scores can make a squared
+    deviation exceed the float range.
+    """
     count = len(values)
     if count == 0:
         return 0.0
+    first = values[0]
+    if all(value == first for value in values):
+        return 0.0
     mean = sum(values) / count
-    variance = sum((value - mean) ** 2 for value in values) / count
+    try:
+        variance = sum((value - mean) ** 2 for value in values) / count
+    except OverflowError as exc:
+        raise ValueError("population standard deviation is not a finite number") from exc
+    if not math.isfinite(variance):
+        raise ValueError("population standard deviation is not a finite number")
     if variance < 0.0:
         variance = 0.0
-    return math.sqrt(variance)
+    deviation = math.sqrt(variance)
+    if not math.isfinite(deviation):
+        raise ValueError("population standard deviation is not a finite number")
+    return deviation
 
 
 def _sort_key(case: FlakyCase) -> tuple[bool, float, float, str]:

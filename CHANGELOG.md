@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.15.5 — 2026-11-25
+
+### Fixed
+
+- Significance, latency, cost, and drift reasons use the same extra-digit rule as the regression and pass-rate reasons. When six decimal places make the two compared values look identical, or round a nonzero value to a signed zero and hide the comparison, the reason prints enough extra digits that the printed values compare the same way and parse back to the values that were compared. The text scoreboard (`mean_diff`, `ci_low`, `ci_high`) and each per-case `diff` do the same against zero, so a win or a loss is not printed as `diff=0.000000` and a significance PASS does not show `ci_low 0.000000`. Calibration prints the threshold and both score columns at one shared place count, the most any human or judge score needs so that `score >= threshold` agrees with the printed cut. Ordinary gaps stay at six places. Decisions are unchanged.
+- History reads stored metrics with types. `mean_score`, `mean_diff`, and `pairwise_win_rate` print only for an int or a float (a bool is not a number). `gate_passed` prints only for a JSON bool: `true` is `gate=pass` and `false` is `gate=fail`. Strings, null, and the numbers `0` and `1` are not coerced. The first bad field, in that order, is a warning `path:line: metrics.<field> must be a finite number` or `path:line: metrics.gate_passed must be a boolean`. The row stays loaded. The table omits it only when the summary would be empty, so a string, bool, or null `mean_score` is not a blank data row. An integer that does not fit in a float is an error (exit 2) with the same `path:line` wording for history, trend, and changepoint, not `int too large to convert to float`. Infinity is still a value: history prints it, trend skips it, and changepoint says the mean is non-finite.
+- `power --from-report` and `bayes` count the same rebuilt per-case pairs from a comparison that has `baseline` and `candidate` runs. A hand-edited `per_case` block is not a second source. A report `load_comparison` accepts is accepted by both commands, including a signed infinity `write_json` stores when a difference of two finite scores overflows. Power uses the comparison's Cohen's dz for that report instead of refusing the row diff. A shorthand file that only has `per_case` still reads those diffs, and a non-finite shorthand diff still raises `diffs must be finite`. An integer shorthand diff that does not fit in a float names `per_case[index].diff`.
+- `changepoint` and `calibrate` report an integer that does not fit in a float as `must be a finite number`, with the history record or the `path:line` of the calibration row. `suite_points` raises the same way for a direct caller.
+- `flaky` raises `ValueError` (`population standard deviation is not a finite number`, exit 2) when a population standard deviation of finite scores overflows. The message is not an errno tuple. Identical extreme scores still have standard deviation 0.
+- `run --save-baseline -foo`, `compare --baseline-name -foo`, and `baseline delete -foo` accept a baseline name that starts with a hyphen. `-h` and `--help` still show help. A long option after `--save-baseline` is still that option.
+- A differing case id in a baseline mismatch is quoted, so a trailing space is visible.
+
 ## 0.15.4 — 2026-11-25
 
 ### Fixed

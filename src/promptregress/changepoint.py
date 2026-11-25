@@ -10,8 +10,9 @@ Series
 
 A row with no ``metrics`` object, or a ``metrics`` object with no
 ``mean_score``, is not a scored run and is skipped. A present
-``mean_score`` that is a bool, a non-number, or a non-finite number raises
-``ValueError``. The series is not sorted by timestamp.
+``mean_score`` that is a bool, a non-number, a non-finite number, or an
+integer that does not fit in a float raises ``ValueError``. The series is
+not sorted by timestamp.
 
 Statistic
 ---------
@@ -354,7 +355,10 @@ def _score_of(record: Mapping[str, Any], record_index: int) -> float | None:
     where = _where(record, record_index)
     if isinstance(raw, bool) or not isinstance(raw, (int, float)):
         raise ValueError(f"{where}: mean_score must be a finite number")
-    value = float(raw)
+    try:
+        value = float(raw)
+    except OverflowError as exc:
+        raise ValueError(f"{where}: mean_score must be a finite number") from exc
     if not math.isfinite(value):
         raise ValueError(f"{where}: mean_score is non-finite")
     return value

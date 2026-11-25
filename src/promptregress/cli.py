@@ -21,6 +21,7 @@ from promptregress.audit import (
     suite_audit_to_dict,
 )
 from promptregress.baseline import (
+    _NAME,
     delete_baseline,
     ensure_baseline_matches,
     format_baseline_table,
@@ -86,9 +87,9 @@ from promptregress.pareto import (
 )
 from promptregress.power import (
     POWER_GRID,
-    achieved_power,
+    achieved_from_dz,
     format_power,
-    load_report_diffs,
+    load_report_effect,
     power_grid,
     power_to_dict,
 )
@@ -118,7 +119,7 @@ from promptregress.risk import (
 from promptregress.runner import run_suite
 from promptregress.scorers import ScoreError
 from promptregress.select import format_selection, select_suite, selection_to_dict
-from promptregress.stats import StatsError, cohens_dz, compare_runs
+from promptregress.stats import StatsError, compare_runs
 from promptregress.synth import OPERATOR_NAMES, synth_to_path
 
 DEMO_BASELINE_TEMPLATE = "Answer completely.\n{input}"
@@ -1116,8 +1117,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--from-report",
         default=None,
         help=(
-            "Comparison JSON from --report-json. Uses per-case diffs for achieved "
-            "power and |dz|. Pass this or --effect, not both"
+            "Comparison JSON from --report-json. Rebuilds paired diffs from the "
+            "stored runs, the same pairs bayes counts, including a signed infinity "
+            "when a finite-score difference overflows. Pass this or --effect, not both"
         ),
     )
     power_parser.add_argument(
@@ -1200,7 +1202,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI. Returns 0, 1 from the gate, or 2 on a usage/runtime error."""
     parser = build_parser()
-    args = parser.parse_args(argv)
+    source = sys.argv[1:] if argv is None else argv
+    args = parser.parse_args(_accept_hyphen_baseline_names(list(source)))
     try:
         if args.command == "init":
             return _cmd_init(str(args.directory))
@@ -1263,6 +1266,71 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     print(f"error: unknown command {args.command}", file=sys.stderr)
     return 2
+
+
+def _accept_hyphen_baseline_names(argv: list[str]) -> list[str]:
+    """Let a legal baseline name that starts with ``-`` through argparse.
+
+    ``--save-baseline -foo`` and ``--baseline-name -foo`` become the ``=``
+    form. Only a single leading hyphen is rewritten, so ``--no-history``
+    stays a flag. ``baseline delete -foo`` (and ``--foo``) gains a ``--``
+    before the name. ``-h`` and ``--help`` stay help. The caller's list is
+    not modified.
+    """
+    rewritten: list[str] = []
+    index = 0
+    while index < len(argv):
+        token = argv[index]
+        if token in {"--save-baseline", "--baseline-name"} and index + 1 < len(argv):
+            name = argv[index + 1]
+            if _single_hyphen_baseline(name):
+                rewritten.append(f"{token}={name}")
+                index += 2
+                continue
+        rewritten.append(token)
+        index += 1
+    return _accept_delete_positional(rewritten)
+
+
+def _single_hyphen_baseline(token: str) -> bool:
+    if token in {"-h", "--help"} or token.startswith("--") or not token.startswith("-"):
+        return False
+    return _NAME.fullmatch(token) is not None
+
+
+def _accept_delete_positional(argv: list[str]) -> list[str]:
+    command_index: int | None = None
+    for index, token in enumerate(argv):
+        if token == "--":
+            break
+        if not token.startswith("-"):
+            command_index = index
+            break
+    if command_index is None or argv[command_index] != "baseline":
+        return argv
+    delete_index: int | None = None
+    for index in range(command_index + 1, len(argv)):
+        token = argv[index]
+        if token == "--":
+            return argv
+        if token.startswith("-"):
+            continue
+        if token == "delete":
+            delete_index = index
+            break
+        return argv
+    if delete_index is None:
+        return argv
+    rest = argv[delete_index + 1 :]
+    if not rest or rest[0] == "--":
+        return argv
+    for offset, token in enumerate(rest):
+        if token in {"-h", "--help", "--"}:
+            return argv
+        if token.startswith("-") and _NAME.fullmatch(token) is not None:
+            cursor = delete_index + 1 + offset
+            return [*argv[:cursor], "--", *argv[cursor:]]
+    return argv
 
 
 def _add_history_flag(parser: argparse.ArgumentParser) -> None:
@@ -1942,9 +2010,8 @@ def _cmd_power(args: argparse.Namespace) -> int:
     achieved = None
     observed = None
     if args.from_report is not None:
-        diffs = load_report_diffs(str(args.from_report))
-        achieved = achieved_power(diffs, alpha)
-        observed = cohens_dz(diffs)
+        diffs, observed = load_report_effect(str(args.from_report))
+        achieved = achieved_from_dz(observed, len(diffs), alpha)
         effect = abs(observed)
         if effect == 0.0:
             text = format_power([], achieved=achieved, observed_dz=observed)

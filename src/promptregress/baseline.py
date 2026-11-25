@@ -134,7 +134,7 @@ def ensure_baseline_matches(stored: RunResult, suite: Suite, name: str) -> None:
 
     Order may differ. ``compare`` pairs by id. The error names the suite when
     the names differ, and the first differing case id in current-suite order
-    (then stored order) when the id multisets differ.
+    (then stored order) when the id multisets differ. The id is quoted.
     """
     problems: list[str] = []
     if stored.suite_name != suite.name:
@@ -144,7 +144,7 @@ def ensure_baseline_matches(stored: RunResult, suite: Suite, name: str) -> None:
         [case.id for case in suite.cases],
     )
     if differing is not None:
-        problems.append(f"first differing case id: {differing}")
+        problems.append(f"first differing case id: {differing!r}")
     if problems:
         detail = "; ".join(problems)
         raise BaselineError(f"baseline {name!r} does not match the current suite: {detail}")

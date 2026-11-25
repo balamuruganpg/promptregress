@@ -87,12 +87,14 @@ def evaluate_gate(
     (``-ci_low``) fails the regression check: ``nan > budget`` and
     ``-inf > budget`` are false in IEEE compare and would otherwise PASS.
 
-    Regression and pass-rate reasons print six decimal places. When that
-    rendering makes the two compared values look identical, or rounds a
-    nonzero value to a signed zero and hides the comparison, those reasons
-    use more places. The printed pair then compares the same way as the
-    full-precision check, and each numeral parses back to the value that
-    was compared. Other checks keep six places. The decision is unchanged.
+    Regression, pass-rate, significance, drift, cost, and latency reasons
+    print six decimal places. When that rendering makes the two compared
+    values look identical, or rounds a nonzero value to a signed zero and
+    hides the comparison, those reasons use more places. The printed pair
+    then compares the same way as the full-precision check, and each
+    numeral parses back to the value that was compared. Significance
+    compares ``ci_low`` with 0. Drift, cost, and latency compare the
+    observation with its budget. The decision is unchanged.
 
     Every check that runs adds a reason that includes the numbers it used.
     ``passed`` is false when any reason starts with ``FAIL``.
@@ -141,15 +143,14 @@ def evaluate_gate(
         reasons.append(f"PASS pass rate: candidate meets the minimum ({rate_detail}).")
 
     if require_significant:
+        shown = _fmt_at(comparison.ci_low, _decision_places(comparison.ci_low, 0.0))
         if comparison.ci_low > 0:
             reasons.append(
-                "PASS significance: improvement CI is entirely above 0 "
-                f"(ci_low {_fmt(comparison.ci_low)})."
+                f"PASS significance: improvement CI is entirely above 0 (ci_low {shown})."
             )
         else:
             reasons.append(
-                "FAIL significance: require_significant is set and ci_low "
-                f"{_fmt(comparison.ci_low)} is not above 0."
+                f"FAIL significance: require_significant is set and ci_low {shown} is not above 0."
             )
     else:
         reasons.append("PASS significance: require_significant is off.")
@@ -221,10 +222,11 @@ def _drift_reason(comparison: Comparison, max_mean_drift: float) -> str:
             f"(max_mean_drift {_fmt(budget)})."
         )
     mean_drift = summary.mean_drift
+    places = _decision_places(mean_drift, budget)
     detail = (
-        f"mean_drift {_fmt(mean_drift)}, "
-        f"max_drift {_fmt(summary.max_drift)}, "
-        f"max_mean_drift {_fmt(budget)}"
+        f"mean_drift {_fmt_at(mean_drift, places)}, "
+        f"max_drift {_fmt_at(summary.max_drift, places)}, "
+        f"max_mean_drift {_fmt_at(budget, places)}"
     )
     # Same rule as an invalid cost or latency observation: ``nan > budget``
     # and a negative mean never compare greater, so they would falsely PASS.
@@ -249,11 +251,14 @@ def _cost_reason(result: RunResult, max_cost_usd: float) -> str:
     usd = estimate.usd
     # Non-finite or negative USD is not a valid estimate. A raw ``usd > budget``
     # compare would treat NaN / negatives as within budget.
+    places = _decision_places(usd, budget)
+    shown = _usd_at(usd, places)
+    limit = _usd_at(budget, places)
     if not math.isfinite(usd) or usd < 0:
-        return f"FAIL cost: cost is invalid ({_usd(usd)}) (budget {_usd(budget)})."
+        return f"FAIL cost: cost is invalid ({shown}) (budget {limit})."
     if usd > budget:
-        return f"FAIL cost: cost {_usd(usd)} exceeds budget {_usd(budget)}."
-    return f"PASS cost: cost {_usd(usd)} is within budget {_usd(budget)}."
+        return f"FAIL cost: cost {shown} exceeds budget {limit}."
+    return f"PASS cost: cost {shown} is within budget {limit}."
 
 
 def _latency_reason(result: RunResult, max_p95_latency_ms: float) -> str:
@@ -262,13 +267,14 @@ def _latency_reason(result: RunResult, max_p95_latency_ms: float) -> str:
     # Same rule as an invalid cost estimate: a non-finite or negative p95
     # cannot pass a set budget. ``nan > budget`` and ``-1 > budget`` are both
     # false in IEEE compare and would PASS.
+    places = _decision_places(observed, budget)
+    shown = _fmt_at(observed, places)
+    limit = _fmt_at(budget, places)
     if not math.isfinite(observed) or observed < 0:
-        return (
-            f"FAIL latency: p95 latency is invalid ({_fmt(observed)}ms) (budget {_fmt(budget)}ms)."
-        )
+        return f"FAIL latency: p95 latency is invalid ({shown}ms) (budget {limit}ms)."
     if observed > budget:
-        return f"FAIL latency: p95 latency {_fmt(observed)}ms exceeds budget {_fmt(budget)}ms."
-    return f"PASS latency: p95 latency {_fmt(observed)}ms is within budget {_fmt(budget)}ms."
+        return f"FAIL latency: p95 latency {shown}ms exceeds budget {limit}ms."
+    return f"PASS latency: p95 latency {shown}ms is within budget {limit}ms."
 
 
 def _budget_number(value: float, label: str) -> float:
@@ -281,7 +287,11 @@ def _budget_number(value: float, label: str) -> float:
 
 
 def _usd(value: float) -> str:
-    return f"${_fmt(value)}"
+    return _usd_at(value, 6)
+
+
+def _usd_at(value: float, places: int) -> str:
+    return f"${_fmt_at(value, places)}"
 
 
 def _fmt(value: float) -> str:

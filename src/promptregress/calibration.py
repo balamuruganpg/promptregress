@@ -38,6 +38,7 @@ from promptregress.conformal import (
     conformal_to_dict,
     format_conformal,
 )
+from promptregress.gate import _decision_places
 from promptregress.loading import strip_utf8_bom_text
 from promptregress.models import AssertionSpec, Case, JudgeAgreement, RunResult
 from promptregress.providers import Provider
@@ -410,14 +411,27 @@ def calibration_to_dict(report: CalibrationReport) -> dict[str, object]:
 
 
 def format_calibration(report: CalibrationReport) -> str:
-    """Human table plus a JSON document. Ends with a newline."""
+    """Human table plus a JSON document. Ends with a newline.
+
+    The threshold and both score columns print six decimal places, or more
+    when ``score >= threshold`` would disagree with the printed cut. One
+    place count is shared, so pasting the printed threshold reproduces the
+    bins.
+    """
+    places = 6
+    for human, judge in zip(report.human_scores, report.judge_scores, strict=True):
+        places = max(
+            places,
+            _decision_places(human, report.threshold),
+            _decision_places(judge, report.threshold),
+        )
     lines = [
         "calibration",
         f"n={report.n}",
         f"pearson={_fmt_optional(report.pearson)}",
         f"spearman={_fmt_optional(report.spearman)}",
         f"mae={report.mae:.6f}",
-        f"threshold={report.threshold:.6f}",
+        f"threshold={report.threshold:.{places}f}",
         f"kappa={_fmt_optional(report.kappa)}",
         f"raw_agreement={report.raw_agreement:.6f}",
         f"both_pass={report.both_pass}",
@@ -435,7 +449,7 @@ def format_calibration(report: CalibrationReport) -> str:
         ]
     )
     for human, judge in zip(report.human_scores, report.judge_scores, strict=True):
-        lines.append(f"| {human:.6f} | {judge:.6f} |")
+        lines.append(f"| {human:.{places}f} | {judge:.{places}f} |")
     if report.notes:
         lines.extend(["", "notes:"])
         lines.extend(f"- {note}" for note in report.notes)
@@ -604,7 +618,10 @@ def _as_bit(value: int, label: str) -> int:
 def _finite(value: float, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{label} must be a finite number")
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError(f"{label} must be a finite number") from exc
     if not math.isfinite(number):
         raise ValueError(f"{label} must be a finite number")
     return number

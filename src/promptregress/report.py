@@ -10,7 +10,7 @@ from typing import Any
 from promptregress.calibration import JUDGE_AGREEMENT_DEFINITION
 from promptregress.cluster import FailureCluster
 from promptregress.drift import DRIFT_DEFINITION
-from promptregress.gate import GateVerdict, evaluate_gate
+from promptregress.gate import GateVerdict, _decision_places, evaluate_gate
 from promptregress.junit_xml import strip_unpaired_surrogates
 from promptregress.models import (
     CaseResult,
@@ -135,9 +135,9 @@ def format_text(
         *_text_usage(comparison.baseline, "baseline"),
         *_text_usage(comparison.candidate, "candidate"),
         *_text_cost(comparison),
-        f"mean_diff={comparison.mean_diff:.6f}",
-        f"ci_low={comparison.ci_low:.6f}",
-        f"ci_high={comparison.ci_high:.6f}",
+        f"mean_diff={_fmt_vs_zero(comparison.mean_diff)}",
+        f"ci_low={_fmt_vs_zero(comparison.ci_low)}",
+        f"ci_high={_fmt_vs_zero(comparison.ci_high)}",
         f"ci_level={level}",
         f"ci_method={comparison.ci_method}",
         f"mcnemar_p={comparison.mcnemar_p:.6f}",
@@ -175,7 +175,7 @@ def format_text(
     for row in comparison.per_case:
         lines.append(
             f"- {row.case_id} baseline={row.baseline_score:.6f} "
-            f"candidate={row.candidate_score:.6f} diff={row.diff:.6f} "
+            f"candidate={row.candidate_score:.6f} diff={_fmt_vs_zero(row.diff)} "
             f"baseline_passed={'true' if row.baseline_passed else 'false'} "
             f"candidate_passed={'true' if row.candidate_passed else 'false'} "
             f"{row.outcome}"
@@ -1173,6 +1173,11 @@ def _html(text: object) -> str:
 
 def _num(value: float) -> str:
     return f"{value:.6f}"
+
+
+def _fmt_vs_zero(value: float) -> str:
+    """Six places, or more when six places would hide a comparison with zero."""
+    return f"{value:.{_decision_places(value, 0.0)}f}"
 
 
 def _fmt_stat(value: float) -> str:
