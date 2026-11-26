@@ -302,6 +302,17 @@ def _fmt_at(value: float, places: int) -> str:
     return f"{value:.{places}f}"
 
 
+def _fmt_vs_zero(value: float) -> str:
+    """Format a number with enough decimal places to distinguish it from zero."""
+    return _fmt_at(value, _decision_places(value, 0.0))
+
+
+def _fmt_pair(left: float, right: float) -> tuple[str, str]:
+    """Format two numbers at the same precision, preserving their order."""
+    places = 6 if left == right else _decision_places(left, right)
+    return _fmt_at(left, places), _fmt_at(right, places)
+
+
 def _decision_places(left: float, right: float) -> int:
     """Decimal places that keep a printed comparison faithful.
 

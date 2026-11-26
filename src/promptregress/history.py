@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeGuard
 
+from promptregress.gate import _fmt_vs_zero
 from promptregress.junit_xml import strip_unpaired_surrogates
 from promptregress.loading import strip_utf8_bom_text
 from promptregress.models import Comparison, RunResult
@@ -474,7 +475,7 @@ def _render_metric(value: object, field: str) -> str | None:
         number = float(value)
     except OverflowError as exc:
         raise ValueError(f"metrics.{field} must be a finite number") from exc
-    return f"{field}={number:.6f}"
+    return f"{field}={_fmt_vs_zero(number)}"
 
 
 def _summary(record: Mapping[str, Any]) -> str:

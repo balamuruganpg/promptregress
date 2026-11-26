@@ -105,7 +105,8 @@ class CaseResult:
     ``case_input`` is the suite case input when the runner scored the case.
     It is empty for results built without a suite case, including runs loaded
     from JSON. The HTML report searches and expands it. The JSON report does
-    not write the field.
+    not write that text. It stores ``input_length``, the character count when
+    known, so risk can use it after loading the report.
 
     ``source_line`` is the 1-based line of the case in the suite file when
     the loader recorded one. It is not written to run JSON. ``None`` means
@@ -132,6 +133,7 @@ class CaseResult:
     judge_scores: tuple[tuple[str, float], ...] = ()
     case_input: str = ""
     source_line: int | None = None
+    input_length: int | None = None
 
 
 @dataclass(frozen=True)

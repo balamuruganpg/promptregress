@@ -53,7 +53,7 @@ process exits 1 when any finding is an error. Warnings alone exit 0.
 import json
 import math
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
 from pathlib import Path
 from typing import Literal
@@ -62,6 +62,7 @@ from promptregress.irt import fit_runs
 from promptregress.junit_xml import strip_unpaired_surrogates
 from promptregress.loading import SuiteError, load_suite, strip_utf8_bom_text
 from promptregress.models import AssertionSpec, Case, CaseResult, RunResult
+from promptregress.report import _pooled_config_names
 from promptregress.risk import load_comparison
 from promptregress.scorers import SCORERS, load_scorer_plugins
 
@@ -290,6 +291,7 @@ SUITE_AUDIT_LIMIT = (
 _NOTE_SENTENCES: tuple[str, ...] = (
     "Suite audit reads comparison reports from compare --report-json and pools each config.",
     "A config is the baseline run or the candidate run, in file order, baseline first.",
+    "Repeated default baseline and candidate labels are qualified by input report number.",
     "The same config name with the same case scores and pass bits is one config.",
     "A later copy is ignored and counted.",
     "The same name with a different score or pass bit raises ValueError.",
@@ -436,11 +438,16 @@ def audit_comparison_files(paths: Sequence[str | Path]) -> SuiteAuditReport:
     listed = [str(path) for path in paths]
     if not listed:
         raise ValueError("suite audit needs at least one comparison report")
-    entries: list[tuple[RunResult, str]] = []
+    reports = []
     for path in listed:
         comparison = load_comparison(path)
-        entries.append((comparison.baseline, path))
-        entries.append((comparison.candidate, path))
+        reports.append((comparison.baseline, comparison.candidate))
+    names = _pooled_config_names([[run.config_name for run in runs] for runs in reports])
+    entries = [
+        (replace(run, config_name=name), path)
+        for path, runs, report_names in zip(listed, reports, names, strict=True)
+        for run, name in zip(runs, report_names, strict=True)
+    ]
     return _audit(entries, comparison_paths=tuple(listed))
 
 

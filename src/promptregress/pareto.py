@@ -50,7 +50,7 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -58,6 +58,7 @@ from promptregress.irt import run_from_dict
 from promptregress.junit_xml import atomic_write_text, strip_unpaired_surrogates
 from promptregress.loading import strip_utf8_bom_text
 from promptregress.models import RunResult
+from promptregress.report import _pooled_config_names
 
 PARETO_NOTE = (
     "A variant is dominated when another is at least as good on every axis "
@@ -211,13 +212,16 @@ def load_variant_file(path: str | Path) -> list[VariantPoint]:
 def load_variants(paths: Sequence[str | Path]) -> list[VariantPoint]:
     """Load every file, in the order given.
 
-    Duplicate names are reported by :func:`pareto_frontier`, which sees the
-    whole set.
+    Repeated default comparison names are qualified by input report number.
+    Other duplicate names are reported by :func:`pareto_frontier`.
     """
-    points: list[VariantPoint] = []
-    for path in paths:
-        points.extend(load_variant_file(path))
-    return points
+    reports = [load_variant_file(path) for path in paths]
+    names = _pooled_config_names([[point.name for point in points] for points in reports])
+    return [
+        replace(point, name=name)
+        for points, report_names in zip(reports, names, strict=True)
+        for point, name in zip(points, report_names, strict=True)
+    ]
 
 
 def pareto_from_files(paths: Sequence[str | Path]) -> ParetoReport:

@@ -65,6 +65,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from promptregress.gate import _fmt_pair, _fmt_vs_zero
 from promptregress.junit_xml import strip_unpaired_surrogates
 
 MIN_RUNS = 8
@@ -82,7 +83,8 @@ CHANGEPOINT_NOTE = (
     "least the observed statistic) / (permutations + 1). "
     "Each permutation shuffles this series with random.Random(seed). "
     "That generator is local to the call. "
-    "Text rounds to 6 decimals. JSON keeps the stored floats. "
+    "Text uses six decimals and adds digits when needed to show a change or a nonzero value. "
+    "JSON keeps the stored floats. "
     "It reports a detected shift in the recorded means. It is not proof of "
     "cause, and it does not change the gate."
 )
@@ -206,9 +208,11 @@ def detect_changepoint(
 def format_changepoint(report: ChangePointReport) -> str:
     """Text report. Ends with a newline.
 
-    Means, the shift, the statistic, and the p-value print with 6 decimals.
+    Numbers use six decimals unless more are needed to show the change or
+    distinguish a nonzero statistic from zero.
     A run line lists only the identifier fields that record carries.
     """
+    before_mean, after_mean = _fmt_pair(report.before_mean, report.after_mean)
     lines = [
         "changepoint",
         f"n={report.n}",
@@ -216,11 +220,11 @@ def format_changepoint(report: ChangePointReport) -> str:
         f"before_n={report.before_n}",
         f"after_n={report.after_n}",
         f"skipped={report.skipped}",
-        f"before_mean={report.before_mean:.6f}",
-        f"after_mean={report.after_mean:.6f}",
-        f"mean_shift={report.mean_shift:.6f}",
-        f"statistic={report.statistic:.6f}",
-        f"p_value={report.p_value:.6f}",
+        f"before_mean={before_mean}",
+        f"after_mean={after_mean}",
+        f"mean_shift={_fmt_vs_zero(report.mean_shift)}",
+        f"statistic={_fmt_vs_zero(report.statistic)}",
+        f"p_value={_fmt_vs_zero(report.p_value)}",
         f"permutations={report.permutations}",
         f"seed={report.seed}",
         f"note={report.note}",

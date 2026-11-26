@@ -8,8 +8,8 @@ Features come from the baseline side and from case metadata only:
 
 - baseline score
 - baseline latency in milliseconds (0 when a report omitted it)
-- case input length in characters (``CaseResult.case_input``; 0 when the
-  stored report did not keep the input)
+- case input length in characters (0 for older reports without a length
+  or input text)
 - baseline output length in characters
 - number of tags
 - one indicator per common scorer kind, 1 when that kind is a key of the
@@ -26,6 +26,9 @@ Training is full-batch gradient descent on mean binary cross-entropy plus
 standardized with the training split's mean and population standard
 deviation (divide by N). A constant feature uses scale 1, so it stays 0
 after centering and its weight stays 0. The intercept is not penalized.
+Finite feature values near the float limits are supported. Standardization
+rescales an overflowing subtraction, and holdout probabilities use an
+exact logit if the standardized values or the float logit overflow.
 The learning rate and the iteration count are fixed. Nothing in training
 draws a random number.
 
@@ -42,6 +45,7 @@ import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
+from fractions import Fraction
 from pathlib import Path
 from statistics import mean
 
@@ -163,7 +167,7 @@ def case_features(case: CaseResult) -> tuple[float, ...]:
     """Baseline-side feature row. Order is :data:`FEATURE_NAMES`.
 
     The candidate result is not an argument. Input length is the character
-    count of ``case_input`` (0 when the runner or the report left it empty).
+    count of ``case_input`` when available, then the stored length, then 0.
     Output length is the character count of the baseline output. Scorer
     indicators are presence in ``scores``, not the subscore value.
     """
@@ -172,6 +176,12 @@ def case_features(case: CaseResult) -> tuple[float, ...]:
     latency = _finite(case.latency_ms, f"case {case_id!r} baseline latency_ms")
     if not isinstance(case.case_input, str):
         raise ValueError(f"case {case_id!r} input must be a string")
+    length = case.input_length
+    if length is not None and (
+        isinstance(length, bool) or not isinstance(length, int) or length < 0
+    ):
+        raise ValueError(f"case {case_id!r} input length must be a non-negative integer")
+    input_length = len(case.case_input) if case.case_input or length is None else length
     if not isinstance(case.output, str):
         raise ValueError(f"case {case_id!r} baseline output must be a string")
     if not isinstance(case.tags, list) or not all(isinstance(tag, str) for tag in case.tags):
@@ -181,7 +191,7 @@ def case_features(case: CaseResult) -> tuple[float, ...]:
     features = (
         score,
         latency,
-        float(len(case.case_input)),
+        _finite(input_length, f"case {case_id!r} input length"),
         float(len(case.output)),
         float(len(case.tags)),
         *(1.0 if kind in case.scores else 0.0 for kind in COMMON_SCORER_KINDS),
@@ -284,8 +294,7 @@ def train(
     )
     _require_finite_params(weights, intercept)
     hold_scores = [
-        _probability(weights, intercept, _standardize(row.features, means, scales))
-        for row in hold_rows
+        _predict_probability(row.features, means, scales, weights, intercept) for row in hold_rows
     ]
     auc = roc_auc([row.label for row in hold_rows], hold_scores)
     return RiskModel(
@@ -313,11 +322,10 @@ def predict_proba(model: RiskModel, cases: Sequence[CaseResult]) -> list[float]:
     ``ValueError``. The candidate run is not read.
     """
     rows = _feature_matrix(model, cases, what="predict_proba")
-    probabilities: list[float] = []
-    for row in rows:
-        standardized = _standardize(row, model.means, model.scales)
-        probabilities.append(_probability(model.coefficients, model.intercept, standardized))
-    return probabilities
+    return [
+        _predict_probability(row, model.means, model.scales, model.coefficients, model.intercept)
+        for row in rows
+    ]
 
 
 def rank_cases(
@@ -394,8 +402,9 @@ def roc_auc(labels: Sequence[int], scores: Sequence[float]) -> float:
 def load_comparison(path: str | Path) -> Comparison:
     """Load a ``compare --report-json`` file.
 
-    ``case_input`` is restored when the file has it. Standard reports omit
-    that field, and the loaded cases then have an empty input (feature 0).
+    Standard reports store ``input_length`` in characters. Older or custom
+    files may provide ``case_input`` instead. When neither is present, the
+    input length feature is 0.
     A history JSONL file is rejected: those rows are headline metrics, not
     per-case pairs. Invalid UTF-8, invalid JSON, and a report that is not a
     comparison raise ``ValueError``.
@@ -794,11 +803,20 @@ def _standardize(
     if not (len(row) == len(means) == len(scales)):
         raise ValueError("feature row length does not match the training standardization")
     standardized = [
-        (value - mean) / scale for value, mean, scale in zip(row, means, scales, strict=True)
+        _standardized_value(value, center, scale)
+        for value, center, scale in zip(row, means, scales, strict=True)
     ]
     if any(not math.isfinite(value) for value in standardized):
         raise ValueError("standardized features must be finite")
     return standardized
+
+
+def _standardized_value(value: float, center: float, scale: float) -> float:
+    gap = value - center
+    if math.isinf(gap):
+        # Rescale before subtracting so a representable quotient survives.
+        return ((value * 0.5 - center * 0.5) / scale) * 2.0
+    return gap / scale
 
 
 def _fit_logistic(
@@ -820,7 +838,7 @@ def _fit_logistic(
         grad_w = [0.0] * width
         grad_b = 0.0
         for row, label in zip(rows, labels, strict=True):
-            probability = _probability(weights, intercept, row)
+            probability = _sigmoid(_logit(weights, intercept, row))
             error = probability - float(label)
             for index, value in enumerate(row):
                 grad_w[index] += error * value
@@ -831,10 +849,36 @@ def _fit_logistic(
     return weights, intercept
 
 
-def _probability(weights: Sequence[float], intercept: float, row: Sequence[float]) -> float:
+def _logit(weights: Sequence[float], intercept: float, row: Sequence[float]) -> float:
     score = intercept
     for weight, value in zip(weights, row, strict=True):
         score += weight * value
+    return score
+
+
+def _predict_probability(
+    row: Sequence[float],
+    means: Sequence[float],
+    scales: Sequence[float],
+    weights: Sequence[float],
+    intercept: float,
+) -> float:
+    standardized = [
+        _standardized_value(value, center, scale)
+        for value, center, scale in zip(row, means, scales, strict=True)
+    ]
+    score = _logit(weights, intercept, standardized)
+    if not math.isfinite(score):
+        # A holdout value can sit far outside the training distribution.
+        # Compute its logit exactly so large contributions can still cancel.
+        exact = Fraction(intercept)
+        for weight, value, center, scale in zip(weights, row, means, scales, strict=True):
+            if weight:
+                exact += Fraction(weight) * (Fraction(value) - Fraction(center)) / Fraction(scale)
+        try:
+            score = float(exact)
+        except OverflowError:
+            return float(exact > 0)
     return _sigmoid(score)
 
 
@@ -862,7 +906,10 @@ def _require_case_id(case: CaseResult, side: str) -> str:
 def _finite(value: object, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{label} must be a finite number")
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise ValueError(f"{label} must be a finite number") from exc
     if not math.isfinite(number):
         raise ValueError(f"{label} must be a finite number")
     return number

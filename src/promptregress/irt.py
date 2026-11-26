@@ -535,6 +535,9 @@ def _case_result(item: object, label: str, index: int) -> CaseResult:
         score_sd=_optional_float(item, "score_sd", label, index),
         n_samples=n_samples,
         judge_scores=_optional_judge_scores(item, label, index),
+        input_length=_optional_count(item, "input_length", label, index)
+        if "input_length" in item
+        else None,
     )
 
 

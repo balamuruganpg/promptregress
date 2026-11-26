@@ -10,12 +10,14 @@ difference is 0 with a point interval. This is a ranking, not a gate.
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 from promptregress.cache import ResponseCache
+from promptregress.gate import _decision_places, _fmt_vs_zero
 from promptregress.loading import strip_utf8_bom_text
 from promptregress.models import RunResult, Suite
 from promptregress.providers import Provider, provider_model_name
@@ -245,11 +247,18 @@ def render_matrix_markdown(result: MatrixResult) -> str:
         f"{level}% CI high |",
         "| ---: | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
+    mean_places = dict.fromkeys((row.mean_score for row in result.rows), 6)
+    for left, right in pairwise(result.rows):
+        if left.mean_score != right.mean_score:
+            places = _decision_places(left.mean_score, right.mean_score)
+            mean_places[left.mean_score] = max(mean_places[left.mean_score], places)
+            mean_places[right.mean_score] = max(mean_places[right.mean_score], places)
     for row in result.rows:
+        places = mean_places[row.mean_score]
         lines.append(
-            f"| {row.rank} | {_cell(row.name)} | {row.mean_score:.6f} | "
-            f"{row.pass_rate:.6f} | {row.diff_vs_best:.6f} | {row.ci_low:.6f} | "
-            f"{row.ci_high:.6f} |"
+            f"| {row.rank} | {_cell(row.name)} | {row.mean_score:.{places}f} | "
+            f"{row.pass_rate:.6f} | {_fmt_vs_zero(row.diff_vs_best)} | "
+            f"{_fmt_vs_zero(row.ci_low)} | {_fmt_vs_zero(row.ci_high)} |"
         )
     lines.append("")
     return "\n".join(lines)

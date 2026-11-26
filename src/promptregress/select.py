@@ -36,7 +36,7 @@ priorities break by case id ascending, in code-point order. There is no
 tie band. Cases in the suite with no observations have no priority and
 rank after every case with history, then by case id ascending. The first
 ``budget`` cases in that order are written. A budget at least as large as
-the suite writes every case, in that same order.
+the suite writes every case in source order.
 
 History ids that are not in the suite are ignored, counted once, and
 listed in code-point order.
@@ -63,7 +63,7 @@ import json
 import math
 import os
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -238,6 +238,9 @@ def select_suite(
         source_suite=str(suite_path),
         output_suite=str(out_path),
     )
+    if budget >= selection.n_suite:
+        priorities = {item.case_id: item for item in selection.selected}
+        selection = replace(selection, selected=tuple(priorities[case.id] for case in suite.cases))
     _write_selected(source, target, suite, [item.case_id for item in selection.selected])
     return selection
 

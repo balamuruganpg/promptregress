@@ -1086,7 +1086,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--budget",
         required=True,
         type=int,
-        help="How many cases to keep. A larger budget keeps the whole suite",
+        help="How many cases to keep. A full-suite budget preserves source order",
     )
     select_parser.add_argument(
         "--out",
@@ -1570,7 +1570,16 @@ def _cmd_compare(args: argparse.Namespace) -> int:
     samples = _samples_from_args(args)
     prices = _pricing_from_args(args)
     if stored is not None:
-        baseline = stored
+        input_lengths = {case.id: len(case.input) for case in suite.cases}
+        baseline = replace(
+            stored,
+            results=[
+                replace(row, input_length=input_lengths[row.case_id])
+                if row.input_length is None and not row.case_input
+                else row
+                for row in stored.results
+            ],
+        )
     else:
         if baseline_template is None:
             raise ValueError(
@@ -1668,15 +1677,15 @@ def _cmd_compare(args: argparse.Namespace) -> int:
         )
     if args.junit_xml:
         write_compare_junit(str(args.junit_xml), comparison)
-    print(
-        format_text(
-            comparison,
-            verdict,
-            failure_clusters=failure_clusters,
-            embedder=reported_embedder,
-        ),
-        end="",
+    summary = format_text(
+        comparison,
+        verdict,
+        failure_clusters=failure_clusters,
+        embedder=reported_embedder,
     )
+    if encoding := getattr(sys.stdout, "encoding", None):
+        summary = summary.encode(encoding, errors="backslashreplace").decode(encoding)
+    print(summary, end="")
     if not args.no_history:
         _write_history(
             make_compare_record(
@@ -1742,7 +1751,11 @@ def _cmd_ablate(args: argparse.Namespace) -> int:
 
 def _cmd_baseline(args: argparse.Namespace) -> int:
     if args.baseline_command == "list":
-        print(format_baseline_table(list_baselines()), end="")
+        warnings: list[str] = []
+        baselines = list_baselines(warnings=warnings)
+        for warning in warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+        print(format_baseline_table(baselines), end="")
         return 0
     if args.baseline_command == "delete":
         delete_baseline(str(args.name))
@@ -1755,7 +1768,10 @@ def _cmd_baseline(args: argparse.Namespace) -> int:
 def _cmd_flaky(args: argparse.Namespace) -> int:
     suite_name = _flaky_suite_name(args)
     rate = _flaky_rate(getattr(args, "fail_on_flaky", None))
-    report = analyze_baselines(suite_name)
+    warnings: list[str] = []
+    report = analyze_baselines(suite_name, warnings=warnings)
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
     print(format_flaky(report), end="")
     if args.out:
         _write_json(str(args.out), flaky_to_dict(report))

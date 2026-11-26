@@ -193,6 +193,7 @@ def _evaluate_case(
             n_samples=1,
             case_input=case.input,
             source_line=case.source_line,
+            input_length=len(case.input),
         )
     latency_ms = _recorded_latency(completion, started)
     if cache is not None:
@@ -254,6 +255,7 @@ def _score_output(
         judge_scores=ensemble_judge_scores(scored.details),
         case_input=case.input,
         source_line=case.source_line,
+        input_length=len(case.input),
     )
 
 
@@ -320,6 +322,7 @@ def _aggregate_samples(samples: Sequence[CaseResult]) -> CaseResult:
         judge_scores=_mean_judge_scores(samples),
         case_input=first.case_input,
         source_line=first.source_line,
+        input_length=first.input_length,
     )
 
 

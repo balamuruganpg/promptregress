@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.15.7 — 2026-11-26
+
+### Fixed
+
+- Slices, drift lines, Markdown and HTML comparisons, JUnit regression notes, history, changepoint, and matrix rankings add decimal places when six would hide a nonzero result or a difference between compared values. HTML sorts case scores, deltas, and drift using their full precision.
+- `select` preserves the source case order when its budget covers the whole suite. This keeps the case-based `risk` holdout stable after a full-suite selection.
+- `pareto` and `audit` qualify repeated default comparison names with their input report numbers. Each such baseline and candidate can contribute to the pooled report.
+- `compare` escapes characters that its stdout encoding cannot represent, so it keeps the gate exit code and appends history on non-UTF-8 terminals.
+- `baseline list` and `flaky` warn with the offending path when a baseline timestamp is outside the supported date range. The date shows as `unknown` and the run remains available for flakiness analysis in file mtime order.
+- Run and comparison JSON store input lengths in characters without storing the input text. `risk` uses the recorded lengths and still reads older reports.
+- `compare`, `bayes`, and `risk` training support finite scores near the float limits. `risk` rescales an overflowing subtraction and computes the holdout logit exactly if float intermediates still overflow.
+
 ## 0.15.6 — 2026-11-26
 
 ### Fixed

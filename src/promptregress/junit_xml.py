@@ -31,7 +31,8 @@ case gets a ``<system-out>`` note and nothing else::
 
     regressed: baseline 1.000000 -> candidate 0.709297
 
-Scores in the note are six decimal places. The note is only attached to
+Scores in the note use six decimal places unless more are needed to show
+the drop. The note is only attached to
 the candidate suite. A case that failed keeps the ``<failure>`` even when
 its score also dropped; it does not get the regression note.
 
@@ -78,6 +79,7 @@ from io import BytesIO
 from pathlib import Path
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
+from promptregress.gate import _fmt_pair
 from promptregress.models import CaseResult, Comparison, RunResult
 from promptregress.scorers import EXACT_KINDS, EXACT_PASS_FLOOR, GRADED_MEAN_FLOOR
 
@@ -160,14 +162,11 @@ def write_compare_junit(path: str | Path, comparison: Comparison) -> None:
     A note is added only when the paired outcome is a loss and the candidate
     case still passed. See the module docstring for the exact text.
     """
-    notes = {
-        row.case_id: (
-            f"regressed: baseline {_format_score(row.baseline_score)} -> "
-            f"candidate {_format_score(row.candidate_score)}"
-        )
-        for row in comparison.per_case
-        if row.outcome == "loss" and row.candidate_passed
-    }
+    notes = {}
+    for row in comparison.per_case:
+        if row.outcome == "loss" and row.candidate_passed:
+            baseline, candidate = _fmt_pair(row.baseline_score, row.candidate_score)
+            notes[row.case_id] = f"regressed: baseline {baseline} -> candidate {candidate}"
     write_junit_xml(
         path,
         [comparison.baseline, comparison.candidate],

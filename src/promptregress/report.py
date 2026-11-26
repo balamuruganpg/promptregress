@@ -3,6 +3,7 @@
 import html
 import json
 import math
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,7 @@ from typing import Any
 from promptregress.calibration import JUDGE_AGREEMENT_DEFINITION
 from promptregress.cluster import FailureCluster
 from promptregress.drift import DRIFT_DEFINITION
-from promptregress.gate import GateVerdict, _decision_places, evaluate_gate
+from promptregress.gate import GateVerdict, _fmt_pair, _fmt_vs_zero, evaluate_gate
 from promptregress.junit_xml import atomic_write_text, strip_unpaired_surrogates
 from promptregress.models import (
     CaseResult,
@@ -124,12 +125,13 @@ def format_text(
     """Plain-text summary used by the CLI. Ends with a newline."""
     resolved = verdict if verdict is not None else evaluate_gate(comparison)
     level = int(round((1.0 - comparison.alpha) * 100))
+    baseline_mean, candidate_mean = _mean_scores(comparison)
     lines = [
         f"suite={comparison.baseline.suite_name}",
         f"baseline={comparison.baseline.config_name}",
         f"candidate={comparison.candidate.config_name}",
-        f"baseline_mean={comparison.baseline.mean_score:.6f}",
-        f"candidate_mean={comparison.candidate.mean_score:.6f}",
+        f"baseline_mean={baseline_mean}",
+        f"candidate_mean={candidate_mean}",
         f"baseline_pass_rate={comparison.baseline.pass_rate:.6f}",
         f"candidate_pass_rate={comparison.candidate.pass_rate:.6f}",
         *_text_usage(comparison.baseline, "baseline"),
@@ -165,17 +167,18 @@ def format_text(
         lines.append("slices:")
         for item in comparison.slices:
             lines.append(
-                f"- {item.tag} n={item.n} mean_diff={item.mean_diff:.6f} "
-                f"ci_low={item.ci_low:.6f} ci_high={item.ci_high:.6f} "
+                f"- {item.tag} n={item.n} mean_diff={_fmt_vs_zero(item.mean_diff)} "
+                f"ci_low={_fmt_vs_zero(item.ci_low)} ci_high={_fmt_vs_zero(item.ci_high)} "
                 f"wins={item.wins} losses={item.losses} ties={item.ties}"
             )
     if failure_clusters is not None:
         lines.extend(_text_failure_modes(failure_clusters, embedder))
     lines.append("per_case:")
     for row in comparison.per_case:
+        baseline_score, candidate_score = _fmt_pair(row.baseline_score, row.candidate_score)
         lines.append(
-            f"- {row.case_id} baseline={row.baseline_score:.6f} "
-            f"candidate={row.candidate_score:.6f} diff={_fmt_vs_zero(row.diff)} "
+            f"- {row.case_id} baseline={baseline_score} "
+            f"candidate={candidate_score} diff={_fmt_vs_zero(row.diff)} "
             f"baseline_passed={'true' if row.baseline_passed else 'false'} "
             f"candidate_passed={'true' if row.candidate_passed else 'false'} "
             f"{row.outcome}"
@@ -193,6 +196,7 @@ def render_markdown(
 ) -> str:
     """Return the Markdown report, including a trailing newline."""
     level = int(round((1.0 - comparison.alpha) * 100))
+    baseline_mean, candidate_mean = _mean_scores(comparison)
     lines = [
         "# PromptRegress comparison",
         "",
@@ -200,8 +204,8 @@ def render_markdown(
         "",
         "| Config | Mean score | Pass rate | Total latency (ms) |",
         "| --- | ---: | ---: | ---: |",
-        _run_table_row(comparison.baseline),
-        _run_table_row(comparison.candidate),
+        _run_table_row(comparison.baseline, baseline_mean),
+        _run_table_row(comparison.candidate, candidate_mean),
         "",
         *_markdown_usage(comparison),
         *_markdown_cost(comparison),
@@ -209,9 +213,9 @@ def render_markdown(
         "",
         "| Statistic | Value |",
         "| --- | ---: |",
-        f"| Mean diff (candidate - baseline) | {comparison.mean_diff:.6f} |",
-        f"| {level}% CI low | {comparison.ci_low:.6f} |",
-        f"| {level}% CI high | {comparison.ci_high:.6f} |",
+        f"| Mean diff (candidate - baseline) | {_fmt_vs_zero(comparison.mean_diff)} |",
+        f"| {level}% CI low | {_fmt_vs_zero(comparison.ci_low)} |",
+        f"| {level}% CI high | {_fmt_vs_zero(comparison.ci_high)} |",
         f"| CI method | {comparison.ci_method} |",
         f"| McNemar p-value | {comparison.mcnemar_p:.6f} |",
         f"| McNemar b (baseline pass, candidate fail) | {comparison.mcnemar_b} |",
@@ -267,6 +271,7 @@ def render_html(
     status = "pass" if verdict.passed else "fail"
     label = "PASS" if verdict.passed else "FAIL"
     suite = _html(comparison.baseline.suite_name)
+    mean_scores = _mean_scores(comparison)
     lines = [
         "<!DOCTYPE html>",
         '<html lang="en">',
@@ -286,7 +291,7 @@ def render_html(
         "    </header>",
         "    <section>",
         "      <h2>Summary</h2>",
-        *_html_summary_chart(comparison),
+        *_html_summary_chart(comparison, mean_scores),
         "      <table>",
         "        <thead>",
         "          <tr>",
@@ -297,8 +302,8 @@ def render_html(
         "          </tr>",
         "        </thead>",
         "        <tbody>",
-        f"          {_html_run_row(comparison.baseline)}",
-        f"          {_html_run_row(comparison.candidate)}",
+        f"          {_html_run_row(comparison.baseline, mean_scores[0])}",
+        f"          {_html_run_row(comparison.candidate, mean_scores[1])}",
         "        </tbody>",
         "      </table>",
         "    </section>",
@@ -314,9 +319,9 @@ def render_html(
         "          </tr>",
         "        </thead>",
         "        <tbody>",
-        _html_stat_row("Mean diff (candidate - baseline)", _num(comparison.mean_diff)),
-        _html_stat_row(f"{level}% CI low", _num(comparison.ci_low)),
-        _html_stat_row(f"{level}% CI high", _num(comparison.ci_high)),
+        _html_stat_row("Mean diff (candidate - baseline)", _fmt_vs_zero(comparison.mean_diff)),
+        _html_stat_row(f"{level}% CI low", _fmt_vs_zero(comparison.ci_low)),
+        _html_stat_row(f"{level}% CI high", _fmt_vs_zero(comparison.ci_high)),
         _html_stat_row("CI method", comparison.ci_method),
         _html_stat_row("McNemar p-value", _num(comparison.mcnemar_p)),
         _html_stat_row(
@@ -757,9 +762,35 @@ def run_to_dict(result: RunResult) -> dict[str, Any]:
     return payload
 
 
-def _run_table_row(result: RunResult) -> str:
+def _pooled_config_names(reports: Sequence[Sequence[str]]) -> list[list[str]]:
+    """Qualify repeated default side names by their input report number."""
+    counts = Counter(name for names in reports for name in names)
+    used = set(counts)
+    resolved = [list(names) for names in reports]
+    for number, names in enumerate(resolved, start=1):
+        if len(names) != 2:
+            continue
+        for side, default in enumerate(("baseline", "candidate")):
+            if names[side] != default or counts[default] < 2:
+                continue
+            label = f"{default} [report {number}]"
+            name = label
+            suffix = 2
+            while name in used:
+                name = f"{label} ({suffix})"
+                suffix += 1
+            names[side] = name
+            used.add(name)
+    return resolved
+
+
+def _mean_scores(comparison: Comparison) -> tuple[str, str]:
+    return _fmt_pair(comparison.baseline.mean_score, comparison.candidate.mean_score)
+
+
+def _run_table_row(result: RunResult, mean_score: str) -> str:
     return (
-        f"| {_cell(result.config_name)} | {result.mean_score:.6f} | "
+        f"| {_cell(result.config_name)} | {mean_score} | "
         f"{result.pass_rate:.6f} | {result.total_latency_ms:.6f} |"
     )
 
@@ -847,13 +878,13 @@ _CASE_PLAIN_COLUMNS: tuple[str, ...] = (
 )
 
 
-def _html_summary_chart(comparison: Comparison) -> list[str]:
+def _html_summary_chart(comparison: Comparison, mean_scores: tuple[str, str]) -> list[str]:
     """Inline SVG of wins, losses, ties, and the two mean scores."""
     return [
         '      <div class="summary-chart">',
         *_html_donut(comparison),
         *_html_outcome_legend(comparison),
-        *_html_mean_bars(comparison),
+        *_html_mean_bars(comparison, mean_scores),
         "      </div>",
     ]
 
@@ -921,12 +952,12 @@ def _bar_width(score: float, full: float = 150.0) -> float:
     return full * min(1.0, max(0.0, score))
 
 
-def _html_mean_bars(comparison: Comparison) -> list[str]:
+def _html_mean_bars(comparison: Comparison, mean_scores: tuple[str, str]) -> list[str]:
     baseline = comparison.baseline
     candidate = comparison.candidate
     label = (
-        f"Mean scores. Baseline {baseline.config_name} {_num(baseline.mean_score)}. "
-        f"Candidate {candidate.config_name} {_num(candidate.mean_score)}."
+        f"Mean scores. Baseline {baseline.config_name} {mean_scores[0]}. "
+        f"Candidate {candidate.config_name} {mean_scores[1]}."
     )
     candidate_class = "bar-candidate"
     if candidate.mean_score < baseline.mean_score:
@@ -938,7 +969,7 @@ def _html_mean_bars(comparison: Comparison) -> list[str]:
     lines = [
         f'        <svg class="means" viewBox="0 0 340 68" role="img" aria-label="{_html(label)}">',
     ]
-    for name, score, css_class, y_text in rows:
+    for (name, score, css_class, y_text), score_text in zip(rows, mean_scores, strict=True):
         y_rect = y_text - 12
         width = _bar_width(score)
         lines.append(f'          <text class="label" x="0" y="{y_text}">{name}</text>')
@@ -950,7 +981,7 @@ def _html_mean_bars(comparison: Comparison) -> list[str]:
             f'          <rect class="{css_class}" x="108" y="{y_rect}" '
             f'width="{width:.2f}" height="14" rx="2"/>'
         )
-        lines.append(f'          <text x="266" y="{y_text}">{_num(score)}</text>')
+        lines.append(f'          <text x="266" y="{y_text}">{score_text}</text>')
     lines.append("        </svg>")
     return lines
 
@@ -1044,22 +1075,25 @@ def _html_case_group(
     case_input: str,
     colspan: int,
 ) -> list[str]:
-    drift_text = "" if drift is None else _num(drift)
+    baseline_score, candidate_score = _fmt_pair(row.baseline_score, row.candidate_score)
+    diff_text = _fmt_vs_zero(row.diff)
+    drift_text = "" if drift is None else _fmt_vs_zero(drift)
+    drift_sort = "" if drift is None else repr(drift)
     latency_text = "" if latency is None else _num(latency)
     failure = "true" if not row.candidate_passed else "false"
     tags_attr = _html(json.dumps(list(row.tags)))
     search_attr = _html(f"{row.case_id} {case_input}")
-    meta = f"delta {_num(row.diff)}"
+    meta = f"delta {diff_text}"
     if drift is not None:
-        meta += f" · drift {_num(drift)}"
+        meta += f" · drift {drift_text}"
     lines = [
         '        <tbody class="case" '
         f'data-index="{index}" '
         f'data-case-id="{_html(row.case_id)}" '
-        f'data-baseline-score="{_num(row.baseline_score)}" '
-        f'data-candidate-score="{_num(row.candidate_score)}" '
-        f'data-delta="{_num(row.diff)}" '
-        f'data-drift="{drift_text}" '
+        f'data-baseline-score="{row.baseline_score!r}" '
+        f'data-candidate-score="{row.candidate_score!r}" '
+        f'data-delta="{row.diff!r}" '
+        f'data-drift="{drift_sort}" '
         f'data-latency="{latency_text}" '
         f'data-outcome="{_html(row.outcome)}" '
         f'data-failure="{failure}" '
@@ -1067,9 +1101,9 @@ def _html_case_group(
         f'data-search="{search_attr}">',
         "          <tr>",
         f"            <td>{_html(row.case_id)}</td>",
-        f'            <td class="num">{_num(row.baseline_score)}</td>',
-        f'            <td class="num">{_num(row.candidate_score)}</td>',
-        f'            <td class="num">{_num(row.diff)}</td>',
+        f'            <td class="num">{baseline_score}</td>',
+        f'            <td class="num">{candidate_score}</td>',
+        f'            <td class="num">{diff_text}</td>',
         f'            <td class="num">{drift_text}</td>',
         f'            <td class="num">{latency_text}</td>',
         f"            <td>{_html_bool(row.baseline_passed)}</td>",
@@ -1117,9 +1151,10 @@ def _html_case_group(
 def _case_row(row: PairedRow) -> str:
     baseline_passed = "true" if row.baseline_passed else "false"
     candidate_passed = "true" if row.candidate_passed else "false"
+    baseline_score, candidate_score = _fmt_pair(row.baseline_score, row.candidate_score)
     return (
-        f"| {_cell(row.case_id)} | {row.baseline_score:.6f} | "
-        f"{row.candidate_score:.6f} | {row.diff:.6f} | {baseline_passed} | "
+        f"| {_cell(row.case_id)} | {baseline_score} | "
+        f"{candidate_score} | {_fmt_vs_zero(row.diff)} | {baseline_passed} | "
         f"{candidate_passed} | {row.outcome} |"
     )
 
@@ -1160,6 +1195,10 @@ def _case_result_to_dict(result: CaseResult) -> dict[str, Any]:
     }
     if result.judge_scores:
         payload["judge_scores"] = [[label, score] for label, score in result.judge_scores]
+    if result.case_input:
+        payload["input_length"] = len(result.case_input)
+    elif result.input_length is not None:
+        payload["input_length"] = result.input_length
     return payload
 
 
@@ -1173,11 +1212,6 @@ def _html(text: object) -> str:
 
 def _num(value: float) -> str:
     return f"{value:.6f}"
-
-
-def _fmt_vs_zero(value: float) -> str:
-    """Six places, or more when six places would hide a comparison with zero."""
-    return f"{value:.{_decision_places(value, 0.0)}f}"
 
 
 def _fmt_stat(value: float) -> str:
@@ -1321,8 +1355,8 @@ def _slice_markdown(comparison: Comparison) -> list[str]:
     ]
     for item in comparison.slices:
         lines.append(
-            f"| {_cell(item.tag)} | {item.n} | {item.mean_diff:.6f} | "
-            f"{item.ci_low:.6f} | {item.ci_high:.6f} | {item.wins} | "
+            f"| {_cell(item.tag)} | {item.n} | {_fmt_vs_zero(item.mean_diff)} | "
+            f"{_fmt_vs_zero(item.ci_low)} | {_fmt_vs_zero(item.ci_high)} | {item.wins} | "
             f"{item.losses} | {item.ties} |"
         )
     lines.append("")
@@ -1356,9 +1390,9 @@ def _html_slice_section(comparison: Comparison) -> list[str]:
             "          <tr>"
             f"<td>{_html(item.tag)}</td>"
             f'<td class="num">{item.n}</td>'
-            f'<td class="num">{_num(item.mean_diff)}</td>'
-            f'<td class="num">{_num(item.ci_low)}</td>'
-            f'<td class="num">{_num(item.ci_high)}</td>'
+            f'<td class="num">{_fmt_vs_zero(item.mean_diff)}</td>'
+            f'<td class="num">{_fmt_vs_zero(item.ci_low)}</td>'
+            f'<td class="num">{_fmt_vs_zero(item.ci_high)}</td>'
             f'<td class="num">{item.wins}</td>'
             f'<td class="num">{item.losses}</td>'
             f'<td class="num">{item.ties}</td>'
@@ -1383,11 +1417,11 @@ def _html_stat_row(label: str, value: str) -> str:
     return f'          <tr><td>{_html(label)}</td><td class="num">{_html(value)}</td></tr>'
 
 
-def _html_run_row(result: RunResult) -> str:
+def _html_run_row(result: RunResult, mean_score: str) -> str:
     return (
         "<tr>"
         f"<td>{_html(result.config_name)}</td>"
-        f'<td class="num">{_num(result.mean_score)}</td>'
+        f'<td class="num">{mean_score}</td>'
         f'<td class="num">{_num(result.pass_rate)}</td>'
         f'<td class="num">{_num(result.total_latency_ms)}</td>'
         "</tr>"
@@ -1833,15 +1867,15 @@ def _text_drift(comparison: Comparison) -> list[str]:
     lines = [
         f"drift_embedder={summary.embedder}",
         f"drift_definition={DRIFT_DEFINITION}",
-        f"mean_drift={summary.mean_drift:.6f}",
-        f"max_drift={summary.max_drift:.6f}",
+        f"mean_drift={_fmt_vs_zero(summary.mean_drift)}",
+        f"max_drift={_fmt_vs_zero(summary.max_drift)}",
         "top_drift:",
     ]
     if not summary.top:
         lines.append("- none")
         return lines
     for item in summary.top:
-        lines.append(f"- {item.case_id} {item.drift:.6f}")
+        lines.append(f"- {item.case_id} {_fmt_vs_zero(item.drift)}")
     return lines
 
 
@@ -1908,8 +1942,8 @@ def _markdown_drift(comparison: Comparison) -> list[str]:
         "",
         "| Statistic | Value |",
         "| --- | ---: |",
-        f"| Mean drift | {summary.mean_drift:.6f} |",
-        f"| Max drift | {summary.max_drift:.6f} |",
+        f"| Mean drift | {_fmt_vs_zero(summary.mean_drift)} |",
+        f"| Max drift | {_fmt_vs_zero(summary.max_drift)} |",
         "",
         "| Case | Drift |",
         "| --- | ---: |",
@@ -1917,7 +1951,7 @@ def _markdown_drift(comparison: Comparison) -> list[str]:
     if not summary.top:
         lines.append("| none |  |")
     for item in summary.top:
-        lines.append(f"| {_cell(item.case_id)} | {item.drift:.6f} |")
+        lines.append(f"| {_cell(item.case_id)} | {_fmt_vs_zero(item.drift)} |")
     lines.append("")
     return lines
 
@@ -2027,8 +2061,8 @@ def _html_drift_section(comparison: Comparison) -> list[str]:
         "          </tr>",
         "        </thead>",
         "        <tbody>",
-        _html_stat_row("Mean drift", _num(summary.mean_drift)),
-        _html_stat_row("Max drift", _num(summary.max_drift)),
+        _html_stat_row("Mean drift", _fmt_vs_zero(summary.mean_drift)),
+        _html_stat_row("Max drift", _fmt_vs_zero(summary.max_drift)),
         "        </tbody>",
         "      </table>",
         "      <table>",
@@ -2046,7 +2080,7 @@ def _html_drift_section(comparison: Comparison) -> list[str]:
         lines.append(
             "          <tr>"
             f"<td>{_html(item.case_id)}</td>"
-            f'<td class="num">{_num(item.drift)}</td>'
+            f'<td class="num">{_fmt_vs_zero(item.drift)}</td>'
             "</tr>"
         )
     lines.extend(["        </tbody>", "      </table>", "    </section>"])

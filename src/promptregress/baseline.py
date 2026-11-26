@@ -92,11 +92,14 @@ def load_baseline(name: str, cwd: str | Path | None = None) -> RunResult:
         raise BaselineError(str(exc)) from exc
 
 
-def list_baselines(cwd: str | Path | None = None) -> list[BaselineInfo]:
+def list_baselines(
+    cwd: str | Path | None = None, *, warnings: list[str] | None = None
+) -> list[BaselineInfo]:
     """Stored baselines sorted by name. A missing directory is an empty list.
 
     Files whose stem is not a legal baseline name are skipped. A legal name
-    whose JSON is not a run report raises :class:`BaselineError`.
+    whose JSON is not a run report raises :class:`BaselineError`. An
+    unrepresentable date is shown as unknown and adds a warning if requested.
     """
     directory = baselines_dir(cwd)
     if not directory.is_dir():
@@ -112,7 +115,7 @@ def list_baselines(cwd: str | Path | None = None) -> list[BaselineInfo]:
         found.append(
             BaselineInfo(
                 name=name,
-                saved_at=_saved_at(path),
+                saved_at=_saved_at(path, warnings),
                 suite_name=result.suite_name,
                 mean_score=result.mean_score,
             )
@@ -186,6 +189,12 @@ def format_baseline_table(rows: Sequence[BaselineInfo]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _saved_at(path: Path) -> str:
-    stamp = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+def _saved_at(path: Path, warnings: list[str] | None) -> str:
+    mtime = path.stat().st_mtime
+    try:
+        stamp = datetime.fromtimestamp(mtime, timezone.utc)
+    except (OverflowError, OSError, ValueError) as exc:
+        if warnings is not None:
+            warnings.append(f"{path}: cannot display modification time {mtime} ({exc})")
+        return "unknown"
     return stamp.strftime("%Y-%m-%dT%H:%M:%SZ")

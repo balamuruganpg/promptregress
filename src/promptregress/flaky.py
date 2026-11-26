@@ -27,10 +27,9 @@ not trip it. The rate must be a finite number in ``[0, 1]``.
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 
-from promptregress.baseline import _NAME, baselines_dir, load_baseline
+from promptregress.baseline import _NAME, _saved_at, baselines_dir, load_baseline
 from promptregress.models import RunResult
 
 _DEFINITIONS = {
@@ -89,18 +88,21 @@ class FlakyReport:
     message: str
 
 
-def analyze_baselines(suite_name: str, cwd: str | Path | None = None) -> FlakyReport:
+def analyze_baselines(
+    suite_name: str, cwd: str | Path | None = None, *, warnings: list[str] | None = None
+) -> FlakyReport:
     """Load stored baselines for ``suite_name`` and summarise per-case flips.
 
     Other suites in the baselines directory are ignored. A legal filename
     whose JSON is not a run report raises :class:`promptregress.baseline.BaselineError`.
+    An unrepresentable date is shown as unknown and adds a warning if requested.
     """
     name = suite_name.strip()
     if name == "":
         raise ValueError("flaky requires a non-empty suite name")
     loaded = _load_suite_runs(name, cwd)
     runs = tuple(
-        FlakyRun(name=item_name, saved_at=_saved_at(path), mean_score=result.mean_score)
+        FlakyRun(name=item_name, saved_at=_saved_at(path, warnings), mean_score=result.mean_score)
         for item_name, path, result in loaded
     )
     if len(loaded) < 2:
@@ -339,8 +341,3 @@ def _case_to_dict(case: FlakyCase) -> dict[str, object]:
         "max": case.maximum,
         "note": case.note,
     }
-
-
-def _saved_at(path: Path) -> str:
-    stamp = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
-    return stamp.strftime("%Y-%m-%dT%H:%M:%SZ")
